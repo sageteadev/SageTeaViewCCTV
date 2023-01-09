@@ -23,7 +23,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: sagetea
-          password: ${{ secret.DOCKER_HUB }}
+          password: secret.DOCKER_HUB
       -
         name: Build Multiarch
         uses: docker/build-push-action@v3
