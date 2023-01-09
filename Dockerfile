@@ -11,13 +11,13 @@ ENV DB_USER=majesticflame \
     SSL_COUNTRY='CA' \
     SSL_STATE='BC' \
     SSL_LOCATION='Vancouver' \
-    SSL_ORGANIZATION='Shinobi Systems' \
+    SSL_ORGANIZATION='SageTea (R)' \
     SSL_ORGANIZATION_UNIT='IT Department' \
     SSL_COMMON_NAME='nvr.ninja' \
     DB_DISABLE_INCLUDED=false
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN mkdir -p /home/Shinobi /config /var/lib/mysql
+RUN mkdir -p /home/SageTeaViewCCTV /config /var/lib/mysql
 
 RUN apt update -y
 RUN apt install wget curl net-tools -y
@@ -82,11 +82,11 @@ RUN apt install -y \
                 xz-utils
 
 
-WORKDIR /home/Shinobi
+WORKDIR /home/SageTeaViewCCTV
 COPY . .
 #RUN rm -rf /home/Shinobi/plugins
-COPY ./plugins  /home/Shinobi/plugins
-RUN chmod -R 777 /home/Shinobi/plugins
+COPY ./plugins  /home/SageTeaViewCCTV/plugins
+RUN chmod -R 777 /home/SageTeaViewCCTV/plugins
 RUN npm i npm@latest -g && \
     npm install pm2 -g && \
     npm install --unsafe-perm
@@ -94,15 +94,15 @@ COPY ./Docker/pm2.yml ./
 
 # Copy default configuration files
 # COPY ./config/conf.json ./config/super.json /home/Shinobi/
-RUN chmod -f +x /home/Shinobi/Docker/init.sh
+RUN chmod -f +x /home/SageTeaViewCCTV/Docker/init.sh
 
-VOLUME ["/home/Shinobi/videos"]
-VOLUME ["/home/Shinobi/libs/customAutoLoad"]
+VOLUME ["/home/SageTeaViewCCTV/videos"]
+VOLUME ["/home/SageTeaViewCCTV/libs/customAutoLoad"]
 VOLUME ["/config"]
 VOLUME ["/var/lib/mysql"]
 
 EXPOSE 8080
 
-ENTRYPOINT ["/home/Shinobi/Docker/init.sh"]
+ENTRYPOINT ["/home/SageTeaViewCCTV/Docker/init.sh"]
 
 CMD [ "pm2-docker", "pm2.yml" ]
