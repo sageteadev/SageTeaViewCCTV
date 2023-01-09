@@ -81,7 +81,7 @@ RUN apt install -y \
                 sudo \
                 xz-utils
 
-
+RUN ls -al
 WORKDIR /home/SageTeaViewCCTV
 COPY . .
 #RUN rm -rf /home/Shinobi/plugins
