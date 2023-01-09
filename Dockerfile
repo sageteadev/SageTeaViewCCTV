@@ -85,12 +85,12 @@ RUN ls -al
 WORKDIR /home/SageTeaViewCCTV
 COPY . .
 #RUN rm -rf /home/Shinobi/plugins
-COPY ./home/runner/work/SageTeaViewCCTV/SageTeaViewCCTV/plugins  /home/SageTeaViewCCTV/plugins
+COPY ./plugins  /home/SageTeaViewCCTV/plugins
 RUN chmod -R 777 /home/SageTeaViewCCTV/plugins
 RUN npm i npm@latest -g && \
     npm install pm2 -g && \
     npm install --unsafe-perm
-COPY ./home/runner/work/SageTeaViewCCTV/SageTeaViewCCTV/Docker/pm2.yml ./
+COPY ./Docker/pm2.yml ./
 
 # Copy default configuration files
 # COPY ./config/conf.json ./config/super.json /home/Shinobi/
