@@ -21,7 +21,7 @@ var createTerminalCommands = function(callback){
                 fs.chmod(pathTxt,0o777,function(err){
                     if(err)console.log(err)
                     console.log('Linking "' + s.mainDirectory + '/INSTALL/sageteaviewcctv" to "/usr/bin/sageteaviewcctv"...')
-                    fs.symlink(s.mainDirectory + '/INSTALL/shinobi', '/usr/bin/shinobi', next)
+                    fs.symlink(s.mainDirectory + '/INSTALL/sageteaviewcctv', '/usr/bin/sageteaviewcctv', next)
                     console.log('You can now use `sageteaviewcctv` in terminal.')
                 })
             })
