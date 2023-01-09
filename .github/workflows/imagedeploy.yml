@@ -22,8 +22,8 @@ jobs:
         name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: sagetea
-          password: dckr_pat_pwkUYvryiDM3-w3YzUhh7ZL1OhY
+          username: secret.DOCKER_HUB_LOGIN
+          password: secret.DOCKER_HUB
       -
         name: Build Multiarch
         uses: docker/build-push-action@v3
