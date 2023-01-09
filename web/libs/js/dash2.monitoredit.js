@@ -661,11 +661,11 @@ $.aM.f.find('[name="type"]').change(function(e){
     $.aM.drawPluginElements = function(){
         if(Object.keys($.aM.connectedDetectorPlugins).length === 0){
             $('.stream-objects .stream-detected-object').remove()
-            $('.shinobi-detector').hide()
-            $('.shinobi-detector-msg').empty()
-            $('.shinobi-detector_name').empty()
-            $('.shinobi-detector_plug').hide()
-            $('.shinobi-detector-invert').show()
+            $('.sageteaviewcctv-detector').hide()
+            $('.sageteaviewcctv-detector-msg').empty()
+            $('.sageteaviewcctv-detector_name').empty()
+            $('.sageteaviewcctv-detector_plug').hide()
+            $('.sageteaviewcctv-detector-invert').show()
             $.aM.drawList()
         }else{
             var pluginTitle = []
@@ -675,12 +675,12 @@ $.aM.f.find('[name="type"]').change(function(e){
                 if(d.notice){
                     pluginNotice.push('<b>' + d.plug + '</b> : ' + d.notice)
                 }
-                $('.shinobi-detector-'+d.plug).show()
+                $('.sageteaviewcctv-detector-'+d.plug).show()
             })
-            $('.shinobi-detector').show()
-            $('.shinobi-detector-invert').hide()
-            $('.shinobi-detector_name').text(pluginTitle.join(', '))
-            if(pluginNotice.length > 0)$('.shinobi-detector-msg').text(pluginNotice.join('<br>'))
+            $('.sageteaviewcctv-detector').show()
+            $('.sageteaviewcctv-detector-invert').hide()
+            $('.sageteaviewcctv-detector_name').text(pluginTitle.join(', '))
+            if(pluginNotice.length > 0)$('.sageteaviewcctv-detector-msg').text(pluginNotice.join('<br>'))
             $.aM.drawList()
         }
     }

@@ -2761,20 +2761,20 @@ $user.ws.on('f',function (d){
         break;
         case'detector_plugged':
             if(!d.notice){d.notice=''}
-            $('.shinobi-detector').show()
-            $('.shinobi-detector-msg').html(d.notice)
-            $('.shinobi-detector_name').text(d.plug)
-            $('.shinobi-detector-'+d.plug).show()
-            $('.shinobi-detector-invert').hide()
+            $('.sageteaviewcctv-detector').show()
+            $('.sageteaviewcctv-detector-msg').html(d.notice)
+            $('.sageteaviewcctv-detector_name').text(d.plug)
+            $('.sageteaviewcctv-detector-'+d.plug).show()
+            $('.sageteaviewcctv-detector-invert').hide()
             $.aM.drawList()
         break;
         case'detector_unplugged':
             $('.stream-objects .stream-detected-object').remove()
-            $('.shinobi-detector').hide()
-            $('.shinobi-detector-msg').empty()
-            $('.shinobi-detector_name').empty()
-            $('.shinobi-detector_plug').hide()
-            $('.shinobi-detector-invert').show()
+            $('.sageteaviewcctv-detector').hide()
+            $('.sageteaviewcctv-detector-msg').empty()
+            $('.sageteaviewcctv-detector_name').empty()
+            $('.sageteaviewcctv-detector_plug').hide()
+            $('.sageteaviewcctv-detector-invert').show()
             $.aM.drawList()
         break;
         case'monitor_edit_failed':

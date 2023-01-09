@@ -1974,7 +1974,7 @@ module.exports = function(s,config,lang){
                       "description": "Custom Flags that bind to the stream Detector uses for analyzation.",
                       "default": "",
                       "example": "",
-                      "form-group-class": "shinobi-detector",
+                      "form-group-class": "sageteaviewcctv-detector",
                       "possible": ""
                    },
                    {
@@ -2000,7 +2000,7 @@ module.exports = function(s,config,lang){
              },
              "Detector": {
                 "name": lang['Global Detector Settings'],
-                "headerTitle": `${lang['Global Detector Settings']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small></h4>`,
+                "headerTitle": `${lang['Global Detector Settings']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="sageteaviewcctv-detector_name"></b> <b class="sageteaviewcctv-detector-invert">${lang['Not Connected']}</b><b class="sageteaviewcctv-detector" style="display:none">${lang['Connected']}</b></span></small></h4>`,
                 "color": "orange",
                 isAdvanced: true,
                 "isSection": true,
@@ -2008,7 +2008,7 @@ module.exports = function(s,config,lang){
                 "id": "monSectionDetector",
                 "selector": "h_det",
                 "attribute": `triggerChange="#add_monitor [detail=detector_record_method]"`,
-                "blockquote": `${lang.DetectorText}\n<p class="shinobi-detector-msg"></p>`,
+                "blockquote": `${lang.DetectorText}\n<p class="sageteaviewcctv-detector-msg"></p>`,
                 "info": [
                    {
                       "name": "detail=detector",
@@ -2548,7 +2548,7 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                        "name": lang['Motion Detection'],
-                       "headerTitle": `${lang['Motion Detection']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small>`,
+                       "headerTitle": `${lang['Motion Detection']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="sageteaviewcctv-detector_name"></b> <b class="sageteaviewcctv-detector-invert">${lang['Not Connected']}</b><b class="sageteaviewcctv-detector" style="display:none">${lang['Connected']}</b></span></small>`,
                        "color": "orange",
                        id: "monSectionDetectorMotion",
                        isSection: true,
@@ -2778,7 +2778,7 @@ module.exports = function(s,config,lang){
                       "name": lang['Object Detection'],
                       "color": "orange",
                       id: "monSectionDetectorObject",
-                      headerTitle: `${lang['Object Detection']} <small><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></small>`,
+                      headerTitle: `${lang['Object Detection']} <small><b class="sageteaviewcctv-detector_name"></b> <b class="sageteaviewcctv-detector-invert">${lang['Not Connected']}</b><b class="sageteaviewcctv-detector" style="display:none">${lang['Connected']}</b></small>`,
                       isFormGroupGroup: true,
                       isSection: true,
                       "section-class": "h_det_input h_det_1",
@@ -2903,13 +2903,13 @@ module.exports = function(s,config,lang){
                      "name": lang['License Plate Detector'],
                      "color": "orange",
                      id: "monSectionLisencePlateDetector",
-                     headerTitle: `${lang['Object Detection']} <small>${lang['Plugin']} : <b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></small>`,
+                     headerTitle: `${lang['Object Detection']} <small>${lang['Plugin']} : <b class="sageteaviewcctv-detector_name"></b> <b class="sageteaviewcctv-detector-invert">${lang['Not Connected']}</b><b class="sageteaviewcctv-detector" style="display:none">${lang['Connected']}</b></small>`,
                      isSection: true,
                      isAdvanced: true,
                      isFormGroupGroup: true,
                      "section-pre-pre-class": "h_det_input h_det_1",
                      "section-pre-class": "h_casc_input h_casc_1",
-                     "section-class": "shinobi-detector-opencv shinobi-detector-openalpr shinobi-detector_plug",
+                     "section-class": "sageteaviewcctv-detector-opencv sageteaviewcctv-detector-openalpr sageteaviewcctv-detector_plug",
                      "info": [
                          {
                             "name": "detail=detector_lisence_plate",
@@ -2961,7 +2961,7 @@ module.exports = function(s,config,lang){
                       isFormGroupGroup: true,
                       "section-pre-pre-class": "h_det_input h_det_1",
                       "section-pre-class": "h_casc_input h_casc_1",
-                      "section-class": "shinobi-detector-opencv shinobi-detector-openalpr shinobi-detector_plug",
+                      "section-class": "sageteaviewcctv-detector-opencv sageteaviewcctv-detector-openalpr sageteaviewcctv-detector_plug",
                       "info": [
                           {
                               "fieldType": "div",

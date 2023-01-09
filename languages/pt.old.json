@@ -904,6 +904,6 @@
   "vp8_cuvid": "VP8 NVENC (NVIDIA HARDWARE de Aceleração)",
   "vp8_qsv": "VP8 (Quick Sync Vídeo)",
   "vp9_cuvid": "VP9 NVENC (NVIDIA HARDWARE de Aceleração)",
-  "whenTheWidthAndHeightBoxesAreShownYouShouldSetThemTo640x480OrBelowThisWillOptimizeTheReadSpeedOfFrames\n": "<p>Quando as caixas Largura e Altura são mostradas, você deve configurá-los para 640x480 ou abaixo. Isto irá otimizar a velocidade de leitura dos quadros.</p>\n<p class=\"shinobi-detector-msg\"></p>",
+  "whenTheWidthAndHeightBoxesAreShownYouShouldSetThemTo640x480OrBelowThisWillOptimizeTheReadSpeedOfFrames\n": "<p>Quando as caixas Largura e Altura são mostradas, você deve configurá-los para 640x480 ou abaixo. Isto irá otimizar a velocidade de leitura dos quadros.</p>\n<p class=\"sageteaviewcctv-detector-msg\"></p>",
   "years": "anos"
 }

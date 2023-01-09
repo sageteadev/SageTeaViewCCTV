@@ -77,9 +77,9 @@ if [ "$sqliteormariadb" = "S" ] || [ "$sqliteormariadb" = "s" ]; then
     sudo apt-get install sqlite3 libsqlite3-dev -y
     sudo npm install sqlite3
     node ./tools/modifyConfiguration.js databaseType=sqlite3
-    if [ ! -e "./shinobi.sqlite" ]; then
-        echo "Creating shinobi.sqlite for SQLite3..."
-        sudo cp sql/shinobi.sample.sqlite shinobi.sqlite
+    if [ ! -e "./sageteaviewcctv.sqlite" ]; then
+        echo "Creating sageteaviewcctv.sqlite for SQLite3..."
+        sudo cp sql/shinobi.sample.sqlite sageteaviewcctv.sqlite
     else
         echo "sageteaviewcctv.sqlite already exists. Continuing..."
     fi
