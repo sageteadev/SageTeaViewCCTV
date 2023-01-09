@@ -122,16 +122,16 @@ $.ccio.vid = {e:$('#video'),c:$('#canvas')};
         e.e=$(this);e.a=e.e.attr('monitor'),e.m=$.ccio.mon[e.a];
         $.ccio.selected=e.a;$('#selected').html(e.a);
         if(e.m.details.sfps&&e.m.details.sfps!==''){$.ccio.framerate=e.m.details.sfps}else{$.ccio.framerate=1;}
-        $.ls.setItem('Shinobi_socket_camera',e.a)
+        $.ls.setItem('SageTeaViewCCTV_socket_camera',e.a)
         $('[monitor]').removeClass('active'),e.e.addClass('active');
     })
 
 
-if($user.mons.length>0&&$.ls.getItem('Shinobi_socket_camera')){$('[monitor="'+$.ls.getItem('Shinobi_socket_camera')+'"]').click()}else{$.ccio.selected=null;}
+if($user.mons.length>0&&$.ls.getItem('SageTeaViewCCTV_socket_camera')){$('[monitor="'+$.ls.getItem('SageTeaViewCCTV_socket_camera')+'"]').click()}else{$.ccio.selected=null;}
 
 $('body')
 .on('click','.logout',function(e){
-    localStorage.removeItem('ShinobiLogin_'+location.host);location.href='/';
+    localStorage.removeItem('SageTeaViewCCTVLogin_'+location.host);location.href='/';
 })
 </script>
 <style>

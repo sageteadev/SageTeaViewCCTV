@@ -5406,12 +5406,12 @@ $('body')
     var logout = function(user,callback){
         $.get($.ccio.init('location',user)+user.auth_token+'/logout/'+user.ke+'/'+user.uid,callback)
     }
-    $.each($.users,function(n,linkedShinobiUser){
-        logout(linkedShinobiUser,function(){});
+    $.each($.users,function(n,linkedSageTeaViewCCTVUser){
+        logout(linkedSageTeaViewCCTVUser,function(){});
     })
     logout($user,function(data){
         console.log(data)
-        localStorage.removeItem('ShinobiLogin_'+location.host);
+        localStorage.removeItem('SageTeaViewCCTVLogin_'+location.host);
         location.href=location.href;
     });
 })

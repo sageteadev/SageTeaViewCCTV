@@ -1,7 +1,7 @@
 //
 // SageTeaViewCCTV
 // Copyright (C) 2016 Moe Alam, moeiscool Shinobi
-// Copyright (C) 2023 SageTea (R)
+// Copyright (C) 2023 Rúben Carneiro,  SageTea (R)
 //
 //
 // # Donate
