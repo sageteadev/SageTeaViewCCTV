@@ -10,7 +10,7 @@ if(databaseOptions.client.indexOf('sqlite')>-1){
     databaseOptions.useNullAsDefault = true;
 }
 if(databaseOptions.client === 'sqlite3' && databaseOptions.connection.filename === undefined){
-    databaseOptions.connection.filename = __dirname+"/shinobi.sqlite"
+    databaseOptions.connection.filename = __dirname+"/sageteaviewcctv.sqlite"
 }
 s.databaseEngine = knex(databaseOptions)
 s.sqlQuery = function(query,values,onMoveOn,hideLog){

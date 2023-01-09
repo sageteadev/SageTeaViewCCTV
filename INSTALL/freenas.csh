@@ -10,7 +10,7 @@ service mysql-server start
 echo "Cloning the official Shinobi Community Edition gitlab repo..."
 git clone "https://gitlab.com/Shinobi-Systems/ShinobiCE"
 cd ./ShinobiCE
-echo "Adding Shinobi user to database..."
+echo "Adding SageTeaViewCCTV user to database..."
 mysql -h localhost -u root -e "source sql/user.sql"
 ehco "Shinobi database framework setup..."
 mysql -h localhost -u root -e "source sql/framework.sql"

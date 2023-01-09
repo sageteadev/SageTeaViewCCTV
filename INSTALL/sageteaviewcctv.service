@@ -1,8 +1,8 @@
 [Unit]
-Description=ShinobiCCTV
+Description=SageTeaViewCCTV
 
 [Service]
-WorkingDirectory=/home/Shinobi
+WorkingDirectory=/home/SageTeaViewCCTV
 Type=forking
 ExecStart=/bin/bash INSTALL/start.sh
 KillMode=process

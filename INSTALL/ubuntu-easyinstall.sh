@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Shinobi - Do you want to Install Node.js?"
+echo "SageteaViewCCTV - Do you want to Install Node.js?"
 echo "(y)es or (N)o"
 read nodejsinstall
 if [ "$nodejsinstall" = "y" ]; then
@@ -20,23 +20,23 @@ echo " Ubuntu Version: $getubuntuversion"
 echo "============="
 if [[ "$getubuntuversion" == "16" || "$getubuntuversion" < "16" ]]; then
     echo "============="
-    echo "Shinobi - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
+    echo "SageTeaViewCCTV - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
     sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
     sudo apt update -y && sudo apt install ffmpeg libav-tools x264 x265 -y
     echo "============="
 else
     echo "============="
-    echo "Shinobi - Installing FFMPEG"
+    echo "SageTeaViewCCTV - Installing FFMPEG"
     sudo apt install ffmpeg libav-tools x264 x265 -y
     echo "============="
 fi
 
 # Install MariaDB
-echo "Shinobi - Do you want to Install MariaDB? Choose No if you have MySQL."
+echo "SageTeaViewCCTV - Do you want to Install MariaDB? Choose No if you have MySQL."
 echo "(y)es or (N)o"
 read mysqlagree
 if [ "$mysqlagree" = "y" ]; then
-    echo "Shinobi - Installing MariaDB"
+    echo "SageTeaViewCCTV - Installing MariaDB"
     echo "Password for root SQL user, If you are installing SQL now then you may put anything:"
     read sqlpass
     echo "mariadb-server mariadb-server/root_password password $sqlpass" | debconf-set-selections
@@ -62,7 +62,7 @@ if [ $? -eq 0 ]; then
     echo "|  DO YOU WANT TO INSTALL MariaDB?   |"
     echo "|  This will remove MYSQL-Server!    |"
     echo "+====================================+"
-    echo "Shinobi - Do you want to Install MariaDB?"
+    echo "SageTeaViewCCTV - Do you want to Install MariaDB?"
     echo "(y)es or (N)o"
     read installmariadb
     if [ "$installmariadb" = "y" ]; then
@@ -73,7 +73,7 @@ if [ $? -eq 0 ]; then
         echo "DESTORY!"
         read mysqlagree
         if [ "$mysqlagree" = "DESTORY!" ]; then
-            echo "Shinobi - Installing MariaDB"
+            echo "SageTeaViewCCTV - Installing MariaDB"
             echo "Password for root SQL user, If you are installing SQL now then you may put anything:"
             read sqlpass
             echo "mariadb-server mariadb-server/root_password password $sqlpass" | debconf-set-selections
@@ -88,11 +88,11 @@ if [ $? -eq 0 ]; then
         fi
     fi
 else  
-    echo "Shinobi - Do you want to Install MariaDB?"
+    echo "SageTeaViewCCTV - Do you want to Install MariaDB?"
     echo "(y)es or (N)o"
     read mysqlagree
     if [ "$mysqlagree" = "y" ]; then
-        echo "Shinobi - Installing MariaDB"
+        echo "SageTeaViewCCTV - Installing MariaDB"
         echo "Password for root SQL user, If you are installing SQL now then you may put anything:"
         read sqlpass
         echo "mariadb-server mariadb-server/root_password password $sqlpass" | debconf-set-selections
@@ -107,13 +107,13 @@ else
 fi 
 
 chmod -R 755 .
-echo "Shinobi - Database Installation"
+echo "SageTeaViewCCTV - Database Installation"
 echo "(y)es or (N)o"
 read mysqlagreeData
 if [ "$mysqlagreeData" = "y" ]; then
     mysql -e "source sql/user.sql" || true
     mysql -e "source sql/framework.sql" || true
-    echo "Shinobi - Do you want to Install Default Data (default_data.sql)?"
+    echo "SageTeaViewCCTV - Do you want to Install Default Data (default_data.sql)?"
     echo "(y)es or (N)o"
     read mysqlDefaultData
     if [ "$mysqlDefaultData" = "y" ]; then
@@ -146,14 +146,14 @@ fi
 
 # Install NPM Libraries
 echo "============="
-echo "Shinobi - Install NPM Libraries"
+echo "SageTeaViewCCTV - Install NPM Libraries"
 sudo npm i npm -g
 sudo npm install --unsafe-perm
 sudo npm audit fix --unsafe-perm
 echo "============="
 
 #Install PM2
-echo "Shinobi - Install PM2"
+echo "SageTeaViewCCTV - Install PM2"
 sudo npm install pm2 -g
 if [ ! -e "./conf.json" ]; then
     cp conf.sample.json conf.json
@@ -161,16 +161,16 @@ fi
 if [ ! -e "./super.json" ]; then
     getip=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
     echo "Admin panel default url: http://$getip:8080/super"
-    echo "Default Superuser : admin@shinobi.video"
+    echo "Default Superuser : admin@sagetea.video"
     echo "Default Password : admin"
     cp super.sample.json super.json
 fi
-echo "Shinobi - Finished"
+echo "SageTeaViewCCTV - Finished"
 touch INSTALL/installed.txt
 echo "Shinobi - Start Shinobi?"
 echo "(y)es or (N)o"
 read startShinobi
-if [ "$startShinobi" = "y" ]; then
+if [ "$startSageTeaViewCCTV" = "y" ]; then
     pm2 start camera.js
     pm2 start cron.js
     pm2 list

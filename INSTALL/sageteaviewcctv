@@ -1,8 +1,8 @@
 #!/bin/bash
-if [ ! -e "/etc/shinobisystems/path.txt" ]; then
+if [ ! -e "/etc/sagetea/path.txt" ]; then
     installationDirectory="/home/Shinobi"
 else
-    installationDirectory=$(cat /etc/shinobisystems/cctv.txt)
+    installationDirectory=$(cat /etc/sagetta/cctv.txt)
 fi
 cd $installationDirectory
 currentBuild=$(git show --oneline -s)
@@ -16,16 +16,16 @@ else
 fi
 if [[ $@ == *'help'* ]] || [ ! "$1" ]; then
     echo "========================================================="
-    echo "==!! Shinobi : The Open Source CCTV and NVR Solution !!=="
+    echo "==!! SageTeaViewCCTV : The Open Source CCTV and NVR Solution !!=="
     echo "========================================================="
     if [ ! "$1" ]; then
         echo "You are missing function parameters."
-        echo "Example : shinobi [command] .."
-        echo "Example : shinobi flush restart logs"
+        echo "Example : sagteaviewcctv [command] .."
+        echo "Example : sageteaviewcctv flush restart logs"
     else
         echo "Hello there! if you need support come on over"
-        echo "to the Shinobi Community Chat! :)"
-        echo "https://discordapp.com/invite/mdhmvuH/"
+        echo "to the SageTeaViewCCTV Community Chat! :)"
+        echo " "
     fi
     echo "========================================================="
     echo "Your available options for COMMAND are as follows"
@@ -75,16 +75,16 @@ if [[ $@ == *'restart'* ]]; then
         pm2 restart $installationDirectory/camera.js
         pm2 restart $installationDirectory/cron.js
     else
-        echo "Shinobi process is not running."
+        echo "SageTeaViewCCTV process is not running."
     fi
 else
     if [[ $@ == *'start'* ]] || [[ $@ == *'now'* ]]; then
         proccessAlive=$(pm2 list | grep camera | grep online)
         if [ "$proccessAlive" ]]; then
-            echo "Shinobi process is already running."
+            echo "SageTeaViewCCTV process is already running."
         else
             if [ -e "$installationDirectory/INSTALL/installed.txt" ]; then
-                echo "Starting Shinobi"
+                echo "Starting SageTeaViewCCTV"
                 pm2 start $installationDirectory/camera.js
                 pm2 start $installationDirectory/cron.js
             fi
@@ -100,15 +100,15 @@ if [[ $@ == *'stop'* ]] || [[ $@ == *'exit'* ]]; then
         pm2 stop $installationDirectory/camera.js
         pm2 stop $installationDirectory/cron.js
     else
-        echo "Shinobi process is not running."
+        echo "SageTeaViewCCTV process is not running."
     fi
 fi
 if [[ $@ == *'version'* ]]; then
     echo "Build ID : $currentCommitNumber"
     if [[ $repo == "Pro" ]]; then
-        echo "Repository : Shinobi Pro"
+        echo "Repository : SageTeaViewCCTV Pro"
     else
-        echo "Repository : Shinobi CE"
+        echo "Repository : SageTeaViewCCTV CE"
     fi
     echo $currentBuild
 fi
@@ -123,25 +123,25 @@ fi
 if [[ $@ == *'getDev'* ]] || [[ $@ == *'getdev'* ]]; then
     if [[ $repo == "Pro" ]]; then
         git checkout dev
-        echo "Shinobi - Restart Shinobi to make the changes take affect."
+        echo "SageTeaViewCCTV - Restart SageTeaViewCCTV to make the changes take affect."
     else
-        echo "Shinobi - Cannot use \"getDev\" with Shinobi CE"
+        echo "SSageTeaViewCCTV - Cannot use \"getDev\" with SageTeaViewCCTV"
     fi
 fi
 if [[ $@ == *'getMaster'* ]] || [[ $@ == *'getmaster'* ]]; then
     if [[ $repo == "Pro" ]]; then
         git checkout master
-        echo "Shinobi - Restart Shinobi to make the changes take affect."
+        echo "SageTeaViewCCTV - Restart SageTeaViewCCTV to make the changes take affect."
     else
-        echo "Shinobi - Cannot use \"getMaster\" with Shinobi CE"
+        echo "SageTeaViewCCTV - Cannot use \"getMaster\" with SageTeaViewCCTV"
     fi
 fi
 if [[ $@ == *'update'* ]]; then
     echo "============="
-    echo "Shinobi - Are you sure you want to update? This will restart Shinobi."
+    echo "SageTeaViewCCTV - Are you sure you want to update? This will restart SageTeaViewCCTV."
     echo "(y)es or (N)o"
-    read updateshinobi
-    if [ "$updateshinobi" = "y" ] || [ "$updateshinobi" = "Y" ]; then
+    read updatesageteaviewcctv
+    if [ "$updatesageteaviewcctv" = "y" ] || [ "$updatesageteaviewcctv" = "Y" ]; then
         echo "Beginning Update Process..."
         pm2 stop $installationDirectory/camera.js
         pm2 stop $installationDirectory/cron.js
