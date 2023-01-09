@@ -84,7 +84,6 @@ RUN apt install -y \
 RUN ls -al
 WORKDIR /home/SageTeaViewCCTV
 COPY . .
-#RUN rm -rf /home/Shinobi/plugins
 COPY ./plugins  /home/SageTeaViewCCTV/plugins
 RUN chmod -R 777 /home/SageTeaViewCCTV/plugins
 RUN npm i npm@latest -g && \
@@ -92,8 +91,6 @@ RUN npm i npm@latest -g && \
     npm install --unsafe-perm
 COPY ./Docker/pm2.yml ./
 
-# Copy default configuration files
-# COPY ./config/conf.json ./config/super.json /home/Shinobi/
 RUN chmod -f +x /home/SageTeaViewCCTV/Docker/init.sh
 
 VOLUME ["/home/SageTeaViewCCTV/videos"]

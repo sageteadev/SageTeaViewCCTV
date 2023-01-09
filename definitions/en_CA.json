@@ -86,7 +86,7 @@
                      },
                      {
                         "name": "MJPEG",
-                        "info": "Similar to JPEG except the frame handling is done by FFMPEG, not Shinobi."
+                        "info": "Similar to JPEG except the frame handling is done by FFMPEG, not SageTeaViewCCTV."
                      },
                      {
                         "name": "H.264",
@@ -97,7 +97,7 @@
                         "info": "Reading Capture Cards, Webcams, or Integrated Cameras."
                      },
                      {
-                        "name": "Shinobi Streamer",
+                        "name": "SageTeaViewCCTV Streamer",
                         "info": "Continuous Recording. Segments are made every 15 minutes by default."
                      }
                   ]
@@ -105,7 +105,7 @@
                {
                   "name": "detail=auto_host_enable",
                   "field": "Automatic",
-                  "description": "Feed the individual pieces required to build a stream URL or provide the full URL and allow Shinobi to parse it for you.",
+                  "description": "Feed the individual pieces required to build a stream URL or provide the full URL and allow SageTeaViewCCTV to parse it for you.",
                   "default": "",
                   "example": "",
                   "possible": ""
@@ -367,7 +367,7 @@
                   "possible": [
                      {
                         "name": "Default",
-                        "info": "Let Shinobi choose."
+                        "info": "Let SageTeaViewCCTV choose."
                      },
                      {
                         "name": "Auto",
@@ -404,7 +404,7 @@
                   "possible": [
                      {
                         "name": "Default",
-                        "info": "Let Shinobi choose."
+                        "info": "Let SageTeaViewCCTV choose."
                      },
                      {
                         "name": "Auto",
@@ -528,7 +528,7 @@
                   "possible": [
                      {
                         "name": "Default",
-                        "info": "Let Shinobi choose."
+                        "info": "Let SageTeaViewCCTV choose."
                      },
                      {
                         "name": "Auto",
@@ -565,7 +565,7 @@
                   "possible": [
                      {
                         "name": "Default",
-                        "info": "Let Shinobi choose."
+                        "info": "Let SageTeaViewCCTV choose."
                      },
                      {
                         "name": "Auto",
@@ -745,7 +745,7 @@
                {
                   "name": "detail=detector_pam",
                   "field": "Use Built-In",
-                  "description": "Use Kevin Godell's Motion Detector. This is built into Shinobi and requires no other configuration to activate.",
+                  "description": "Use Kevin Godell's Motion Detector. This is built into SageTeaViewCCTV and requires no other configuration to activate.",
                   "default": "No",
                   "example": "",
                   "possible": ""
@@ -1120,7 +1120,7 @@
                {
                   "name": "detail=size",
                   "field": "Max Storage Amount",
-                  "description": "The amount max space Shinobi will allow to be consumed before purging. This value is read in megabytes.",
+                  "description": "The amount max space SageTeaViewCCTV will allow to be consumed before purging. This value is read in megabytes.",
                   "default": "10000",
                   "example": "600000",
                   "possible": "Up to 95% of your maximum storage space if only one master account exists."

@@ -43,7 +43,7 @@ if(databaseOptions.client.indexOf('sqlite')>-1){
     databaseOptions.useNullAsDefault = true;
 }
 if(databaseOptions.client === 'sqlite3' && databaseOptions.connection.filename === undefined){
-    databaseOptions.connection.filename = __dirname+"/shinobi.sqlite"
+    databaseOptions.connection.filename = __dirname+"/sageteaviewcctv.sqlite"
 }
 s.databaseEngine = knex(databaseOptions)
 s.dateSubtract = function(date, interval, units){
@@ -522,4 +522,4 @@ io.on('f',function(d){
         break;
     }
 })
-console.log('Shinobi : cron.js started')
+console.log('SageTeaViewCCTV : cron.js started')

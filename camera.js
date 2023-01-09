@@ -1,6 +1,6 @@
 //
-// Shinobi
-// Copyright (C) 2016 Moe Alam, moeiscool
+// SageTeaViewCCTV
+// Copyright (C) 2016 Moe Alam, moeiscool Shinobi
 // Copyright (C) 2023 SageTea (R)
 //
 //

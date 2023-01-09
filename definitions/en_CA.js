@@ -120,7 +120,7 @@ module.exports = function(s,config,lang){
                                "info": "A static file. Read at a lower rate and should not be used for an actual live stream."
                             },
                             {
-                               "name": "Shinobi Streamer",
+                               "name": "SageTeaViewCCTV Streamer",
                                "value": "socket",
                                "info": "Websocket JPEG-based P2P stream."
                             },

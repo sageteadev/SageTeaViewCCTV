@@ -58,7 +58,7 @@ if [ "$DB_DISABLE_INCLUDED" = "false" ]; then
     fi
 
     echo "Create database user if it does not exists ..."
-    mysql -e "source /home/Shinobi/sql/user.sql" || true
+    mysql -e "source /home/SageTeaViewCCTV/sql/user.sql" || true
 
 else
     echo "Create database schema if it does not exists ..."
@@ -68,7 +68,7 @@ DATABASE_CONFIG='{"host": "'$DB_HOST'","user": "'$DB_USER'","password": "'$DB_PA
 
 cronKey="$(head -c 1024 < /dev/urandom | sha256sum | awk '{print substr($1,1,29)}')"
 
-cd /home/Shinobi
+cd /home/SageTeaViewCCTV
 mkdir -p libs/customAutoLoad
 if [ -e "/config/conf.json" ]; then
     cp /config/conf.json conf.json
@@ -80,9 +80,9 @@ node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTIO
 
 
 echo "============="
-echo "Default Superuser : admin@shinobi.video"
+echo "Default Superuser : admin@sagetea.video"
 echo "Default Password : admin"
-echo "Log in at http://HOST_IP:SHINOBI_PORT/super"
+echo "Log in at http://HOST_IP:SAGETEA_PORT/super"
 if [ -e "/config/super.json" ]; then
     cp /config/super.json super.json
 elif [ ! -e "./super.json" ]; then
@@ -95,5 +95,5 @@ if [ -e "/config/init.extension.sh" ]; then
 fi
 
 # Execute Command
-echo "Starting Shinobi ..."
+echo "Starting SageTeaViewCCTV ..."
 exec "$@"

@@ -1,6 +1,6 @@
 {
-  "name": "shinobi",
-  "productName": "Shinobi",
+  "name": "sageteaviewcctv",
+  "productName": "SageTeaView CCTV",
   "version": "2.0.0",
   "description": "CCTV and NVR in Node.js",
   "main": "camera.js",
@@ -11,13 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/Shinobi-Systems/Shinobi.git"
+    "url": "git+https://github.com/sageteadev/SageTeaViewCCTV.git"
   },
   "author": "Moe Alam, Shinobi Systems",
+  "maintainer": "Rúben Carneiro, SageTea (R)",
   "bugs": {
-    "url": "https://gitlab.com/Shinobi-Systems/Shinobi/issues"
+    "url": "https://github.com/sageteadev/SageTeaViewCCTV/issues"
   },
-  "homepage": "https://gitlab.com/Shinobi-Systems/Shinobi#readme",
+  "homepage": "https://github.com/sageteadev/SageTeaViewCCTV/blob/main/README.md",
   "dependencies": {
     "aws-sdk": "^2.279.1",
     "backblaze-b2": "^1.0.4",
