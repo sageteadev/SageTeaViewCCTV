@@ -1,13 +1,13 @@
-name: ci
+name: Build and Deploy
 
 on:
   push:
     branches:
       - 'main'
+
 jobs:
   docker:
-  using: 'docker'
-  image: 'Dockerfile'
+    runs-on: ubuntu-latest
     steps:
       -
         name: Checkout
@@ -25,10 +25,19 @@ jobs:
           username: sagetea
           password: dckr_pat_pwkUYvryiDM3-w3YzUhh7ZL1OhY
       -
-        name: Build and push
+        name: Build arm64
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: sagetea/sageteaviewcctv
+
+        name: Build amd64
         uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: sagetea/sageteaviewcctv:dev
+          tags: sagetea/sageteaviewcctv
