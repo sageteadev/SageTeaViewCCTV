@@ -1,13 +1,18 @@
-# SageTeaView CCTV 
+# SageTeaViewCCTV 
 ### (GPLv3 + AGPLv3)
 
-SageTeaView CCTV is the Open Source CCTV Solution written in Node.JS Forked from Shinobi CE project Shinobi Systems. Designed with multiple account system, Streams by WebSocket, and Save to WebM. Shinobi can record IP Cameras and Local Cameras.
+SageTeaViewCCTV is the Open Source CCTV Solution written in Node.JS Forked from Shinobi CE project Shinobi Systems. Designed with multiple account system, Streams by WebSocket, and Save to WebM. SageTeaViewCCTV i can record IP Cameras and Local Cameras.
 
 ## How to run
 
 - Pull Image:
-'docker pull sagetea/sageteaviewcctv:dev'
+
+```console
+´docker pull sagetea/sageteaviewcctv:dev´
+```
 
 - Run:
 
-'docker run -d --name='SageTeaViewCCTV' -p '8080:8080/tcp' -v "/dev/shm/SageTeaViewCCTV/streams":'/dev/shm/streams':'rw' -v "$HOME/SageTeaViewCCTV/config":'/config':'rw' -v "$HOME/SageTeaViewCCTV/customAutoLoad":'/home/SageTeaViewCCTV/libs/customAutoLoad':'rw' -v "$HOME/SageTeaViewCCTV/database":'/var/lib/mysql':'rw' -v "$HOME/SageTeaViewCCTV/videos":'/home/SageTeaViewCCTV/videos':'rw' -v "$HOME/SageTeaViewCCTV/plugins":'/home/SageTeaViewCCTV/plugins':'rw' -v '/etc/localtime':'/etc/localtime':'ro' sagetea/sageteaviewcctv:dev'
+```console
+docker run -d --name='SageTeaViewCCTV' -p '8080:8080/tcp' -v "/dev/shm/SageTeaViewCCTV/streams":'/dev/shm/streams':'rw' -v "$HOME/SageTeaViewCCTV/config":'/config':'rw' -v "$HOME/SageTeaViewCCTV/customAutoLoad":'/home/SageTeaViewCCTV/libs/customAutoLoad':'rw' -v "$HOME/SageTeaViewCCTV/database":'/var/lib/mysql':'rw' -v "$HOME/SageTeaViewCCTV/videos":'/home/SageTeaViewCCTV/videos':'rw' -v "$HOME/SageTeaViewCCTV/plugins":'/home/SageTeaViewCCTV/plugins':'rw' -v '/etc/localtime':'/etc/localtime':'ro' sagetea/sageteaviewcctv:dev'
+```
