@@ -32,4 +32,4 @@ jobs:
           file: /home/runner/work/SageTeaViewCCTV/SageTeaViewCCTV/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: sagetea/sageteaviewcctv
+          tags: sagetea/sageteaviewcctv:dev

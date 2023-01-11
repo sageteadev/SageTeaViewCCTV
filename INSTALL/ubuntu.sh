@@ -125,9 +125,9 @@ sudo npm install pm2 -g
 echo "SageTeaViewCCTV - Finished"
 sudo chmod -R 755 .
 touch INSTALL/installed.txt
-dos2unix /home/Shinobi/INSTALL/shinobi
-ln -s /home/Shinobi/INSTALL/shinobi /usr/bin/shinobi
-echo "Shinobi - Start Shinobi and set to start on boot?"
+dos2unix /home/SageTeaViewCCTV/INSTALL/sageteaviewcctv
+ln -s /home/SageTeaViewCCTV/INSTALL/sageteaviewcctv /usr/bin/sageteaviewcctv
+echo "SageTeaViewCCTV - Start SageTeaViewCCTV and set to start on boot?"
 echo "(y)es or (N)o"
 read startSageTeaViewCCTV
 if [ "$SageTeaViewCCTV" = "y" ] || [ "$SageTeaViewCCTV" = "y" ]; then
