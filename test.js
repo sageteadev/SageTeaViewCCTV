@@ -1,6 +1,7 @@
 //
 // Shinobi
 // Copyright (C) 2016 Moe Alam, moeiscool
+// Copyright (C) 2023 Rúben Carneiro SageTea (R)
 //
 //
 // # Donate
