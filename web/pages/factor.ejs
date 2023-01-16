@@ -52,7 +52,7 @@
 </div>
 <script src="<%-window.libURL%>libs/js/material.min.js"></script>
 <script>
-    $.ccio={f:$('#auth-form'),ls:localStorage.getItem('ShinobiAuth_'+location.host)}
+    $.ccio={f:$('#auth-form'),ls:localStorage.getItem('SageteaViewCCTVAuth_'+location.host)}
     $.ccio.gid=function(x){
         if(!x){x=10};var t = "";var p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         for( var i=0; i < x; i++ )
@@ -61,7 +61,7 @@
     };
     if(!$.ccio.ls||$.ccio.ls===''){
         $.ccio.ls=$.ccio.gid(20)
-        localStorage.setItem('ShinobiAuth_'+location.host,$.ccio.ls)
+        localStorage.setItem('SageteaViewCCTVAuth_'+location.host,$.ccio.ls)
     }
     $(document).ready(function(){
         $('#machineID').val($.ccio.ls)
