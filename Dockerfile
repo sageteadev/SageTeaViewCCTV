@@ -81,24 +81,24 @@ RUN apt install -y \
                 sudo \
                 xz-utils
 
-RUN ls -al
 WORKDIR /home/SageTeaViewCCTV
 COPY . .
 COPY ./plugins  /home/SageTeaViewCCTV/plugins
 RUN chmod -R 777 /home/SageTeaViewCCTV/plugins
 RUN npm i npm@latest -g && \
-    npm install pm2 -g && \
-    npm install --unsafe-perm
+    npm install --unsafe-perm && \
+    npm install pm2 -g
 COPY ./Docker/pm2.yml ./
 
 RUN chmod -f +x /home/SageTeaViewCCTV/Docker/init.sh
+RUN sed -i -e 's/\r//g' /home/SageTeaViewCCTV/Docker/init.sh
 
 VOLUME ["/home/SageTeaViewCCTV/videos"]
 VOLUME ["/home/SageTeaViewCCTV/libs/customAutoLoad"]
 VOLUME ["/config"]
 VOLUME ["/var/lib/mysql"]
 
-EXPOSE 8080
+EXPOSE 8080 443 21 25
 
 ENTRYPOINT ["/home/SageTeaViewCCTV/Docker/init.sh"]
 
