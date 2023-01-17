@@ -100,6 +100,6 @@ VOLUME ["/var/lib/mysql"]
 
 EXPOSE 8080 443 21 25
 
-ENTRYPOINT ["/home/SageTeaViewCCTV/Docker/init.sh"]
+ENTRYPOINT ["sh","/home/SageTeaViewCCTV/Docker/init.sh"]
 
 CMD [ "pm2-docker", "pm2.yml" ]
