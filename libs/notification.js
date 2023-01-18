@@ -176,7 +176,7 @@ module.exports = function(s,config,lang){
     // mailing with nodemailer
     try{
         if(config.mail){
-            if(config.mail.from === undefined){config.mail.from = '"ShinobiCCTV" <no-reply@shinobi.video>'}
+            if(config.mail.from === undefined){config.mail.from = '"SageTeaViewCCTV" <no-reply@sagetea.video>'}
             s.nodemailer = require('nodemailer').createTransport(config.mail);
         }
         var onDetectorNoTriggerTimeoutForEmail = function(e){

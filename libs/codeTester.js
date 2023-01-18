@@ -38,7 +38,7 @@ module.exports = function(s,config,lang){
             s.location.super =  s.mainDirectory + '/super-test.json'
             fs.writeFileSync(s.location.super,s.s([
                 {
-                    "mail":"admin@shinobi.video",
+                    "mail":"admin@sagetea.video",
                     "pass":"21232f297a57a5a743894a0e4a801fc3",
                     "tokens":[
                         "111"
