@@ -1,0 +1,26 @@
+{
+   "name": "shinobi-platerecognizer",
+   "author": "Moe Alam",
+   "version": "1.0.0",
+   "description": "Object Detection plugin for DeepStack",
+   "main": "shinobi-platerecognizer.js",
+   "dependencies": {
+      "request": "^2.88.0",
+      "express": "^4.16.2",
+      "moment": "^2.19.2",
+      "socket.io": "^4.4.1",
+      "socket.io-client": "^4.5.3"
+   },
+   "devDependencies": {},
+   "bin": "shinobi-platerecognizer.js",
+   "pkg": {
+      "targets": [
+         "node12"
+      ],
+      "scripts": [
+         "../pluginBase.js"
+      ],
+      "assets": []
+   },
+   "disabled": true
+}

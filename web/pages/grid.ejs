@@ -15,7 +15,7 @@ if(!data.group || data.group === ''){
     data.group = '$'
 }
 </script>
-<link rel="stylesheet" href="<%=data.url%>/libs/css/font-awesome.min.css">
+<link rel="stylesheet" href="<%=data.url%>/assets/vendor/font-awesome/css/font-awesome.min.css">
 <link rel="stylesheet" href="<%=data.url%>/libs/css/bootstrap.min.css">
 <link rel="stylesheet" href="<%=data.url%>/libs/css/gridstack.min.css">
 <link rel="stylesheet" href="<%=data.url%>/libs/css/gridstack-extra.min.css">
@@ -109,9 +109,8 @@ if(!data.group || data.group === ''){
                 height = saved.height;
                 autoPlacement = false;
             }
-            var tmp = '<div auth="'+data.auth+'" ke="'+data.ke+'" mid="'+monitor.mid+'" class="grid-stack-item"><div class="grid-stack-item-content"><div class="grid-stack-item-content-overlay"><a monitor="watch_off"><i class="fa fa-times-circle"></i></a></div><iframe src="'+data.url+'/'+data.auth+'/embed/'+monitor.ke+'/'+monitor.mid+'/fullscreen|jquery|relative"></iframe></div></div>'
+            var tmp = '<div auth="'+data.auth+'" ke="'+data.ke+'" mid="'+monitor.mid+'" class="grid-stack-item"><div class="grid-stack-item-content"><div class="grid-stack-item-content-overlay"><a monitor="watch_off"><i class="fa fa-times-circle"></i></a></div><iframe src="'+data.url+'/'+data.auth+'/embed/'+monitor.ke+'/'+monitor.mid+`/fullscreen|jquery|relative?host=${location.pathname}"></iframe></div></div>`
             grid.addWidget($(tmp), x, y, width, height, autoPlacement);
         })
     });
 </script>
-            

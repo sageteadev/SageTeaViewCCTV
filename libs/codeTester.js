@@ -38,7 +38,7 @@ module.exports = function(s,config,lang){
             s.location.super =  s.mainDirectory + '/super-test.json'
             fs.writeFileSync(s.location.super,s.s([
                 {
-                    "mail":"admin@sagetea.video",
+                    "mail":"admin@shinobi.video",
                     "pass":"21232f297a57a5a743894a0e4a801fc3",
                     "tokens":[
                         "111"
@@ -46,7 +46,7 @@ module.exports = function(s,config,lang){
                 }
             ],null,3))
             setTimeout(function(){
-                require(s.mainDirectory + '/test/run.js')(s,config,lang,io)
+                require('../test/run.js')(s,config,lang,io)
             },500)
         }
     }

@@ -1,0 +1,15 @@
+<main class="page-tab" id="tab-initial">
+    <div class="row">
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+          include fieldBuilders.ejs
+        %>
+        <% Object.keys(define['Home'].blocks).forEach(function(blockKey){
+              const theBlock = define['Home'].blocks[blockKey];
+              drawBlock(theBlock)
+          }) %>
+    </div>
+</main>

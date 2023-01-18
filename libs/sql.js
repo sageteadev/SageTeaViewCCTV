@@ -1,9 +1,5 @@
 var fs = require('fs');
-var async = require("async");
 module.exports = function(s,config){
-    s.onBeforeDatabaseLoadExtensions.forEach(function(extender){
-        extender(config)
-    })
     //sql/database connection with knex
     s.databaseOptions = {
       client: config.databaseType,
@@ -20,144 +16,212 @@ module.exports = function(s,config){
         }
     }
     if(s.databaseOptions.client === 'sqlite3' && s.databaseOptions.connection.filename === undefined){
-        s.databaseOptions.connection.filename = s.mainDirectory+"/sageteaviewcctv.sqlite"
+        s.databaseOptions.connection.filename = s.mainDirectory+"/shinobi.sqlite"
     }
-    s.mergeQueryValues = function(query,values){
-        if(!values){values=[]}
-        var valuesNotFunction = true;
-        if(typeof values === 'function'){
-            var values = [];
-            valuesNotFunction = false;
-        }
-        if(values&&valuesNotFunction){
-            var splitQuery = query.split('?')
-            var newQuery = ''
-            splitQuery.forEach(function(v,n){
-                newQuery += v
-                var value = values[n]
-                if(value){
-                    if(isNaN(value) || value instanceof Date){
-                        newQuery += "'"+value+"'"
-                    }else{
-                        newQuery += value
-                    }
-                }
-            })
-        }else{
-            newQuery = query
-        }
-        return newQuery
-    }
-    s.getUnixDate = function(value){
-        newValue = new Date(value).valueOf()
-        return newValue
-    }
-    s.stringToSqlTime = function(value){
-        newValue = new Date(value.replace('T',' '))
-        return newValue
-    }
-    var runQuery = async.queue(function(data, callback) {
-        s.databaseEngine
-        .raw(data.query,data.values)
-        .asCallback(callback)
-    }, 4);
-    s.sqlQuery = function(query,values,onMoveOn,hideLog){
-        if(!values){values=[]}
-        if(typeof values === 'function'){
-            var onMoveOn = values;
-            var values = [];
-        }
-        if(!onMoveOn){onMoveOn=function(){}}
-        // if(s.databaseOptions.client === 'pg'){
-        //     query = query
-        //         .replace(/ NOT LIKE /g," NOT ILIKE ")
-        //         .replace(/ LIKE /g," ILIKE ")
-        // }
-        if(config.debugLog === true){
-            var mergedQuery = s.mergeQueryValues(query,values)
-            s.debugLog('s.sqlQuery QUERY',mergedQuery)
-        }
-        if(!s.databaseEngine || !s.databaseEngine.raw){
-            s.connectDatabase()
-        }
-        return runQuery.push({
-            query: query,
-            values: values
-        },function(err,r){
-            if(err && !hideLog){
-                console.log('s.sqlQuery QUERY ERRORED',query)
-                console.log('s.sqlQuery ERROR',err)
-            }
-            if(onMoveOn && typeof onMoveOn === 'function'){
-                switch(s.databaseOptions.client){
-                    case'sqlite3':
-                        if(!r)r=[]
-                    break;
-                    default:
-                        if(r)r=r[0]
-                    break;
-                }
-                onMoveOn(err,r)
-            }
-        })
-    }
-    s.connectDatabase = function(){
-        s.databaseEngine = require('knex')(s.databaseOptions)
-    }
-    s.preQueries = function(){
+    const {
+        knexQuery,
+        knexQueryPromise,
+        knexError,
+        cleanSqlWhereObject,
+        processSimpleWhereCondition,
+        processWhereCondition,
+        mergeQueryValues,
+        getDatabaseRows,
+        sqlQuery,
+        connectDatabase,
+        sqlQueryBetweenTimesWithPermissions,
+    } = require('./database/utils.js')(s,config)
+    s.onBeforeDatabaseLoadExtensions.forEach(function(extender){
+        extender(config)
+    })
+    s.knexQuery = knexQuery
+    s.knexQueryPromise = knexQueryPromise
+    s.getDatabaseRows = getDatabaseRows
+    s.sqlQuery = sqlQuery
+    s.connectDatabase = connectDatabase
+    s.sqlQueryBetweenTimesWithPermissions = sqlQueryBetweenTimesWithPermissions
+    s.preQueries = async function(){
         var knex = s.databaseEngine
         var mySQLtail = ''
         if(config.databaseType === 'mysql'){
             mySQLtail = ' ENGINE=InnoDB DEFAULT CHARSET=utf8'
+            //add Presets table and modernize
+            var createPresetsTableQuery = 'CREATE TABLE IF NOT EXISTS `Presets` (  `ke` varchar(50) DEFAULT NULL,  `name` text,  `details` text,  `type` varchar(50) DEFAULT NULL)'
+            s.sqlQuery( createPresetsTableQuery + mySQLtail + ';',[],function(err){
+                if(err)console.error(err)
+                if(config.databaseType === 'sqlite3'){
+                    var aQuery = "ALTER TABLE Presets RENAME TO _Presets_old;"
+                        aQuery += createPresetsTableQuery
+                        aQuery += "INSERT INTO Presets (`ke`, `name`, `details`, `type`) SELECT `ke`, `name`, `details`, `type` FROM _Presets_old;COMMIT;DROP TABLE _Presets_old;"
+                }else{
+                    s.sqlQuery('ALTER TABLE `Presets` CHANGE COLUMN `type` `type` VARCHAR(50) NULL DEFAULT NULL AFTER `details`;',[],function(err){
+                        if(err)console.error(err)
+                    },true)
+                }
+            },true)
+            //add Schedules table, will remove in future
+            s.sqlQuery("CREATE TABLE IF NOT EXISTS `Schedules` (`ke` varchar(50) DEFAULT NULL,`name` text,`details` text,`start` varchar(10) DEFAULT NULL,`end` varchar(10) DEFAULT NULL,`enabled` int(1) NOT NULL DEFAULT '1')" + mySQLtail + ';',[],function(err){
+                if(err)console.error(err)
+            },true)
+            //add Timelapses and Timelapse Frames tables, will remove in future
+            s.sqlQuery("CREATE TABLE IF NOT EXISTS `Timelapses` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`details` longtext,`date` date NOT NULL,`time` timestamp NOT NULL,`end` timestamp NOT NULL,`size` int(11)NOT NULL)" + mySQLtail + ';',[],function(err){
+                if(err)console.error(err)
+            },true)
+            s.sqlQuery("CREATE TABLE IF NOT EXISTS `Timelapse Frames` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`details` longtext,`filename` varchar(50) NOT NULL,`time` timestamp NULL DEFAULT NULL,`size` int(11) NOT NULL)" + mySQLtail + ';',[],function(err){
+                if(err)console.error(err)
+            },true)
+            //Add index to Videos table
+            s.sqlQuery('CREATE INDEX `videos_index` ON Videos(`time`);',[],function(err){
+                if(err && err.code !== 'ER_DUP_KEYNAME'){
+                    console.error(err)
+                }
+            },true)
+            //Add index to Events table
+            s.sqlQuery('CREATE INDEX `events_index` ON Events(`ke`, `mid`, `time`);',[],function(err){
+                if(err && err.code !== 'ER_DUP_KEYNAME'){
+                    console.error(err)
+                }
+            },true)
+            //Add index to Logs table
+            s.sqlQuery('CREATE INDEX `logs_index` ON Logs(`ke`, `mid`, `time`);',[],function(err){
+                if(err && err.code !== 'ER_DUP_KEYNAME'){
+                    console.error(err)
+                }
+            },true)
+            //Add index to Monitors table
+            s.sqlQuery('CREATE INDEX `monitors_index` ON Monitors(`ke`, `mode`, `type`, `ext`);',[],function(err){
+                if(err && err.code !== 'ER_DUP_KEYNAME'){
+                    console.error(err)
+                }
+            },true)
+            //Add index to Timelapse Frames table
+            s.sqlQuery('CREATE INDEX `timelapseframes_index` ON `Timelapse Frames`(`ke`, `mid`, `time`);',[],function(err){
+                if(err && err.code !== 'ER_DUP_KEYNAME'){
+                    console.error(err)
+                }
+            },true)
+            //add Cloud Videos table, will remove in future
+            s.sqlQuery('CREATE TABLE IF NOT EXISTS `Cloud Videos` (`mid` varchar(50) NOT NULL,`ke` varchar(50) DEFAULT NULL,`href` text NOT NULL,`size` float DEFAULT NULL,`time` timestamp NULL DEFAULT NULL,`end` timestamp NULL DEFAULT NULL,`status` int(1) DEFAULT \'0\',`details` text)' + mySQLtail + ';',[],function(err){
+                if(err)console.error(err)
+            },true)
+            //add Events Counts table, will remove in future
+            s.sqlQuery('CREATE TABLE IF NOT EXISTS `Events Counts` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`details` longtext NOT NULL,`time` timestamp NOT NULL,`end` timestamp NOT NULL DEFAULT current_timestamp(),`count` int(10) NOT NULL DEFAULT 1,`tag` varchar(30) DEFAULT NULL)' + mySQLtail + ';',[],function(err){
+                if(err && err.code !== 'ER_TABLE_EXISTS_ERROR'){
+                    console.error(err)
+                }
+                s.sqlQuery('ALTER TABLE `Events Counts`	ADD COLUMN `time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `details`;',[],function(err){
+                    // console.error(err)
+                },true)
+            },true)
+            //add Cloud Timelapse Frames table, will remove in future
+            s.sqlQuery('CREATE TABLE IF NOT EXISTS `Cloud Timelapse Frames` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`href` text NOT NULL,`details` longtext,`filename` varchar(50) NOT NULL,`time` timestamp NULL DEFAULT NULL,`size` int(11) NOT NULL)' + mySQLtail + ';',[],function(err){
+                if(err)console.error(err)
+            },true)
+            //create Files table
+            var createFilesTableQuery = "CREATE TABLE IF NOT EXISTS `Files` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`name` tinytext NOT NULL,`size` float NOT NULL DEFAULT '0',`details` text NOT NULL,`status` int(1) NOT NULL DEFAULT '0',`time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+            s.sqlQuery(createFilesTableQuery + mySQLtail + ';',[],function(err){
+                if(err)console.error(err)
+                //add time column to Files table
+                if(config.databaseType === 'sqlite3'){
+                    var aQuery = "ALTER TABLE Files RENAME TO _Files_old;"
+                        aQuery += createPresetsTableQuery
+                        aQuery += "INSERT INTO Files (`ke`, `mid`, `name`, `details`, `size`, `status`, `time`) SELECT `ke`, `mid`, `name`, `details`, `size`, `status`, `time` FROM _Files_old;COMMIT;DROP TABLE _Files_old;"
+                }else{
+                    s.sqlQuery('ALTER TABLE `Files`	ADD COLUMN `time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `status`;',[],function(err){
+                        if(err && err.sqlMessage && err.sqlMessage.indexOf('Duplicate') === -1)console.error(err)
+                    },true)
+                }
+            },true)
         }
-        //add Presets table and modernize
-        var createPresetsTableQuery = 'CREATE TABLE IF NOT EXISTS `Presets` (  `ke` varchar(50) DEFAULT NULL,  `name` text,  `details` text,  `type` varchar(50) DEFAULT NULL)'
-        s.sqlQuery( createPresetsTableQuery + mySQLtail + ';',[],function(err){
-            if(err)console.error(err)
-            if(config.databaseType === 'sqlite3'){
-                var aQuery = "ALTER TABLE Presets RENAME TO _Presets_old;"
-                    aQuery += createPresetsTableQuery
-                    aQuery += "INSERT INTO Presets (`ke`, `name`, `details`, `type`) SELECT `ke`, `name`, `details`, `type` FROM _Presets_old;COMMIT;DROP TABLE _Presets_old;"
-            }else{
-                s.sqlQuery('ALTER TABLE `Presets` CHANGE COLUMN `type` `type` VARCHAR(50) NULL DEFAULT NULL AFTER `details`;',[],function(err){
-                    if(err)console.error(err)
-                },true)
+        try{
+            s.databaseEngine.schema.createTable('LoginTokens', table => {
+                if(config.databaseType === 'mysql'){
+                    table.charset('utf8');
+                    table.collate('utf8_general_ci');
+                }
+                table.string('loginId',255).defaultTo('')
+                table.string('type',25).defaultTo('')
+                table.string('ke',50).defaultTo('')
+                table.string('uid',50).defaultTo('')
+                table.string('name',50).defaultTo('Unknown')
+                table.timestamp('lastLogin').defaultTo(s.databaseEngine.fn.now())
+            }).then(() => {
+                s.databaseEngine.schema.alterTable('LoginTokens', function(table) {
+                    table.unique('loginId')
+                }).then(() => {
+                    s.systemLog('Created New Database Table : LoginTokens')
+                }).catch((err) => {
+                    console.log(err)
+                })
+            }).catch((err) => {
+                if(err && err.code !== 'ER_TABLE_EXISTS_ERROR'){
+                    console.log('error')
+                    console.log(err)
+                }
+            })
+        }catch(err){
+            console.log(err)
+        }
+        try{
+            await s.databaseEngine.schema.table('Videos', table => {
+                table.string('objects')
+            })
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
             }
-        },true)
-        //add Schedules table, will remove in future
-        s.sqlQuery("CREATE TABLE IF NOT EXISTS `Schedules` (`ke` varchar(50) DEFAULT NULL,`name` text,`details` text,`start` varchar(10) DEFAULT NULL,`end` varchar(10) DEFAULT NULL,`enabled` int(1) NOT NULL DEFAULT '1')" + mySQLtail + ';',[],function(err){
-            if(err)console.error(err)
-        },true)
-        //add Timelapses and Timelapse Frames tables, will remove in future
-        s.sqlQuery("CREATE TABLE IF NOT EXISTS `Timelapses` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`details` longtext,`date` date NOT NULL,`time` timestamp NOT NULL,`end` timestamp NOT NULL,`size` int(11)NOT NULL)" + mySQLtail + ';',[],function(err){
-            if(err)console.error(err)
-        },true)
-        s.sqlQuery("CREATE TABLE IF NOT EXISTS `Timelapse Frames` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`details` longtext,`filename` varchar(50) NOT NULL,`time` timestamp NULL DEFAULT NULL,`size` int(11) NOT NULL)" + mySQLtail + ';',[],function(err){
-            if(err)console.error(err)
-        },true)
-        //add Cloud Videos table, will remove in future
-        s.sqlQuery('CREATE TABLE IF NOT EXISTS `Cloud Videos` (`mid` varchar(50) NOT NULL,`ke` varchar(50) DEFAULT NULL,`href` text NOT NULL,`size` float DEFAULT NULL,`time` timestamp NULL DEFAULT NULL,`end` timestamp NULL DEFAULT NULL,`status` int(1) DEFAULT \'0\',`details` text)' + mySQLtail + ';',[],function(err){
-            if(err)console.error(err)
-        },true)
-        //add Cloud Timelapse Frames table, will remove in future
-        s.sqlQuery('CREATE TABLE IF NOT EXISTS `Cloud Timelapse Frames` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`href` text NOT NULL,`details` longtext,`filename` varchar(50) NOT NULL,`time` timestamp NULL DEFAULT NULL,`size` int(11) NOT NULL)' + mySQLtail + ';',[],function(err){
-            if(err)console.error(err)
-        },true)
-        //create Files table
-        var createFilesTableQuery = "CREATE TABLE IF NOT EXISTS `Files` (`ke` varchar(50) NOT NULL,`mid` varchar(50) NOT NULL,`name` tinytext NOT NULL,`size` float NOT NULL DEFAULT '0',`details` text NOT NULL,`status` int(1) NOT NULL DEFAULT '0',`time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)"
-        s.sqlQuery(createFilesTableQuery + mySQLtail + ';',[],function(err){
-            if(err)console.error(err)
-            //add time column to Files table
-            if(config.databaseType === 'sqlite3'){
-                var aQuery = "ALTER TABLE Files RENAME TO _Files_old;"
-                    aQuery += createPresetsTableQuery
-                    aQuery += "INSERT INTO Files (`ke`, `mid`, `name`, `details`, `size`, `status`, `time`) SELECT `ke`, `mid`, `name`, `details`, `size`, `status`, `time` FROM _Files_old;COMMIT;DROP TABLE _Files_old;"
-            }else{
-                s.sqlQuery('ALTER TABLE `Files`	ADD COLUMN `time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `status`;',[],function(err){
-                    if(err && err.sqlMessage && err.sqlMessage.indexOf('Duplicate') === -1)console.error(err)
-                },true)
+        }
+        try{
+            await s.databaseEngine.schema.table('Videos', table => {
+                table.tinyint('archive',1).defaultTo(0)
+            })
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
             }
-        },true)
+        }
+        try{
+            await s.databaseEngine.schema.table('Monitors', table => {
+                table.string('saveDir',255).defaultTo('')
+            })
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
+        }
+        try{
+            await s.databaseEngine.schema.table('Timelapse Frames', table => {
+                table.tinyint('archive',1).defaultTo(0)
+                table.string('saveDir',255).defaultTo('')
+            })
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
+        }
+        try{
+            await s.databaseEngine.schema.table('Events', table => {
+                table.tinyint('archive',1).defaultTo(0)
+            })
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
+        }
+        try{
+            s.databaseEngine.schema.table('Files', table => {
+                table.tinyint('archive',1).defaultTo(0)
+            }).then(() => {
+                console.log(`archive added to Files table`)
+            }).catch((err) => {
+                if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                    console.log('error')
+                    console.log(err)
+                }
+            })
+        }catch(err){
+            console.log(err)
+        }
         delete(s.preQueries)
     }
 }

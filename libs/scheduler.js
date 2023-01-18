@@ -3,11 +3,16 @@ module.exports = function(s,config,lang,app,io){
     //Get all Schedules
     s.getAllSchedules = function(callback){
         s.schedules = {}
-        s.sqlQuery('SELECT * FROM Schedules',function(err,rows){
-            rows.forEach(function(schedule){
+        s.knexQuery({
+            action: "select",
+            columns: "*",
+            table: "Schedules"
+        },(err,rows) => {
+
+            rows && rows.forEach(function(schedule){
                 s.updateSchedule(schedule)
             })
-            if(callback)callback()
+            if(callback && typeof callback === 'function')callback()
         })
     }
     //update schedule
@@ -114,10 +119,11 @@ module.exports = function(s,config,lang,app,io){
             var scheduleNames = Object.keys(s.schedules[key])
             scheduleNames.forEach(function(name){
                 var schedule = s.schedules[key][name]
-                if(!schedule.active && schedule.enabled === 1 && schedule.start && schedule.details.monitorStates){
+                if(schedule.enabled === 1 && schedule.start && schedule.details.monitorStates){
                     var timePasses = checkTimeAgainstSchedule(schedule)
                     var daysPasses = checkDaysAgainstSchedule(schedule)
-                    if(timePasses && daysPasses){
+                    var passed = timePasses && daysPasses
+                    if(passed && !schedule.active){
                         schedule.active = true
                         var monitorStates = schedule.details.monitorStates
                         monitorStates.forEach(function(stateName){
@@ -131,7 +137,7 @@ module.exports = function(s,config,lang,app,io){
                                 // console.log(endData)
                             })
                         })
-                    }else{
+                    }else if(!passed && schedule.active){
                         schedule.active = false
                     }
                 }
@@ -141,7 +147,16 @@ module.exports = function(s,config,lang,app,io){
     //
     s.findSchedule = function(groupKey,name,callback){
         //presetQueryVals = [ke, type, name]
-        s.sqlQuery("SELECT * FROM Schedules WHERE ke=? AND name=? LIMIT 1",[groupKey,name],function(err,schedules){
+        s.knexQuery({
+            action: "select",
+            columns: "*",
+            table: "Schedules",
+            where: [
+                ['ke','=',groupKey],
+                ['name','=',name],
+            ],
+            limit: 1
+        },function(err,schedules) {
             var schedule
             var notFound = false
             if(schedules && schedules[0]){
@@ -179,27 +194,31 @@ module.exports = function(s,config,lang,app,io){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
-            var theQuery = "SELECT * FROM Schedules WHERE ke=?"
-            var theQueryValues = [req.params.ke]
+            var whereQuery = [
+                ['ke','=',req.params.ke]
+            ]
             if(req.params.name){
-                theQuery += ' AND name=?'
-                theQueryValues.push(req.params.name)
+                whereQuery.push(['name','=',req.params.name])
             }
-            s.sqlQuery(theQuery,theQueryValues,function(err,schedules){
-                if(schedules && schedules[0]){
-                    endData.ok = true
-                    schedules.forEach(function(schedule){
-                        s.checkDetails(schedule)
-                    })
-                    endData.schedules = schedules
-                }else{
-                    endData.msg = user.lang['Not Found']
-                }
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Schedules",
+                where: whereQuery,
+            },function(err,schedules) {
+                endData.ok = true
+                schedules = schedules || []
+                schedules.forEach(function(schedule){
+                    s.checkDetails(schedule)
+                })
+                endData.schedules = schedules
                 s.closeJsonResponse(res,endData)
             })
         })
@@ -217,9 +236,11 @@ module.exports = function(s,config,lang,app,io){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             switch(req.params.action){
@@ -243,7 +264,11 @@ module.exports = function(s,config,lang,app,io){
                                 end: form.end,
                                 enabled: form.enabled
                             }
-                            s.sqlQuery('INSERT INTO Schedules ('+Object.keys(insertData).join(',')+') VALUES (?,?,?,?,?,?)',Object.values(insertData))
+                            s.knexQuery({
+                                action: "insert",
+                                table: "Schedules",
+                                insert: insertData
+                            })
                             s.tx({
                                 f: 'add_schedule',
                                 insertData: insertData,
@@ -256,14 +281,23 @@ module.exports = function(s,config,lang,app,io){
                                 details: s.stringJSON(form.details),
                                 start: form.start,
                                 end: form.end,
-                                enabled: form.enabled,
-                                ke: req.params.ke,
-                                name: req.params.name
+                                enabled: form.enabled
                             }
-                            s.sqlQuery('UPDATE Schedules SET details=?,start=?,end=?,enabled=? WHERE ke=? AND name=?',Object.values(insertData))
+                            s.knexQuery({
+                                action: "update",
+                                table: "Schedules",
+                                update: insertData,
+                                where: [
+                                    ['ke','=',req.params.ke],
+                                    ['name','=',req.params.name],
+                                ]
+                            })
                             s.tx({
                                 f: 'edit_schedule',
-                                insertData: insertData,
+                                insertData: Object.assign(insertData,{
+                                    ke: req.params.ke,
+                                    name: req.params.name,
+                                }),
                                 ke: req.params.ke,
                                 name: req.params.name
                             },'GRP_'+req.params.ke)
@@ -286,7 +320,14 @@ module.exports = function(s,config,lang,app,io){
                             endData.msg = user.lang['Schedule Configuration Not Found']
                             s.closeJsonResponse(res,endData)
                         }else{
-                            s.sqlQuery('DELETE FROM Schedules WHERE ke=? AND name=?',[req.params.ke,req.params.name],function(err){
+                            s.knexQuery({
+                                action: "delete",
+                                table: "Schedules",
+                                where : {
+                                    ke: req.params.ke,
+                                    name: req.params.name,
+                                }
+                            },function(err){
                                 if(!err){
                                     endData.msg = lang["Deleted Schedule Configuration"]
                                     endData.ok = true

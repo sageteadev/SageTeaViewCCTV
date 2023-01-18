@@ -1,0 +1,15 @@
+<main class="container page-tab pt-3" id="tab-cameraProbe">
+    <form class="dark row">
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+          include fieldBuilders.ejs
+        %>
+        <% Object.keys(define['Camera Probe'].blocks).forEach(function(blockKey){
+              var accountSettings = define['Camera Probe'].blocks[blockKey]
+              drawBlock(accountSettings)
+          }) %>
+    </form>
+</main>

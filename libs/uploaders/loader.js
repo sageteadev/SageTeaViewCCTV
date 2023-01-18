@@ -9,7 +9,8 @@ module.exports = function(s){
         if(opt.onDeleteTimelapseFrameFromCloud)s.onDeleteTimelapseFrameFromCloudExtensions[opt.name] = opt.onDeleteTimelapseFrameFromCloud
         s.beforeAccountSave(opt.beforeAccountSave)
         s.onAccountSave(opt.onAccountSave)
-        s.cloudDisksLoader(opt.name)
+        s.cloudDisksLoaded.push(opt.name)
+        if(opt.onGetVideoData)s.cloudDiskUseOnGetVideoDataExtensions[opt.name] = opt.onGetVideoData
     }
     s.addSimpleUploader = function(opt){
         s.loadGroupAppExtender(opt.loadGroupAppExtender)

@@ -5,17 +5,34 @@ module.exports = function(s,config,lang){
     s.superUsersApi = {}
     s.factorAuth = {}
     s.failedLoginAttempts = {}
+    s.alternateLogins = {}
     //
     var getUserByUid = function(params,columns,callback){
         if(!columns)columns = '*'
-        s.sqlQuery(`SELECT ${columns} FROM Users WHERE uid=? AND ke=?`,[params.uid,params.ke],function(err,r){
+        s.knexQuery({
+            action: "select",
+            columns: columns,
+            table: "Users",
+            where: [
+                ['uid','=',params.uid],
+                ['ke','=',params.ke],
+            ]
+        },(err,r) => {
             if(!r)r = []
             var user = r[0]
             callback(err,user)
         })
     }
     var getUserBySessionKey = function(params,callback){
-        s.sqlQuery('SELECT * FROM Users WHERE auth=? AND ke=?',[params.auth,params.ke],function(err,r){
+        s.knexQuery({
+            action: "select",
+            columns: '*',
+            table: "Users",
+            where: [
+                ['auth','=',params.auth],
+                ['ke','=',params.ke],
+            ]
+        },(err,r) => {
             if(!r)r = []
             var user = r[0]
             callback(err,user)
@@ -23,7 +40,18 @@ module.exports = function(s,config,lang){
     }
     var loginWithUsernameAndPassword = function(params,columns,callback){
         if(!columns)columns = '*'
-        s.sqlQuery(`SELECT ${columns} FROM Users WHERE mail=? AND (pass=? OR pass=?) LIMIT 1`,[params.username,params.password,s.createHash(params.password)],function(err,r){
+        s.knexQuery({
+            action: "select",
+            columns: columns,
+            table: "Users",
+            where: [
+                ['mail','=',params.username],
+                ['pass','=',params.password],
+                ['or','mail','=',params.username],
+                ['pass','=',s.createHash(params.password)],
+            ],
+            limit: 1
+        },(err,r) => {
             if(!r)r = []
             var user = r[0]
             callback(err,user)
@@ -31,7 +59,15 @@ module.exports = function(s,config,lang){
     }
     var getApiKey = function(params,columns,callback){
         if(!columns)columns = '*'
-        s.sqlQuery(`SELECT ${columns} FROM API WHERE code=? AND ke=?`,[params.auth,params.ke],function(err,r){
+        s.knexQuery({
+            action: "select",
+            columns: columns,
+            table: "API",
+            where: [
+                ['code','=',params.auth],
+                ['ke','=',params.ke],
+            ]
+        },(err,r) => {
             if(!r)r = []
             var apiKey = r[0]
             callback(err,apiKey)
@@ -42,36 +78,34 @@ module.exports = function(s,config,lang){
             var isSessionKey = false
             if(apiKey){
                 var sessionKey = params.auth
-                createSession(apiKey,{
-                    auth: sessionKey,
-                    permissions: s.parseJSON(apiKey.details),
-                    details: {}
-                })
                 getUserByUid(apiKey,'mail,details',function(err,user){
                     if(user){
-                        try{
-                            editSession({
-                                auth: sessionKey
-                            },{
-                                mail: user.mail,
-                                details: s.parseJSON(user.details),
-                                lang: s.getLanguageFile(user.details.lang)
-                            })
-                        }catch(er){
-                            console.log('FAILED TO EDIT',er)
-                        }
+                        createSession(apiKey,{
+                            auth: sessionKey,
+                            permissions: s.parseJSON(apiKey.details),
+                            mail: user.mail,
+                            details: s.parseJSON(user.details),
+                            lang: s.getLanguageFile(user.details.lang)
+                        })
+                    }else{
+                        createSession(apiKey,{
+                            auth: sessionKey,
+                            permissions: s.parseJSON(apiKey.details),
+                            details: {}
+                        })
                     }
                     callback(err,s.api[params.auth])
                 })
             }else{
                 getUserBySessionKey(params,function(err,user){
                     if(user){
-                        isSessionKey = true
-                        createSession(apiKey,{
+                        createSession(user,{
+                            auth: params.auth,
                             details: JSON.parse(user.details),
+                            isSessionKey: true,
                             permissions: {}
                         })
-                        callback(err,user,isSessionKey)
+                        callback(err,user,true)
                     }
                 })
             }
@@ -89,16 +123,14 @@ module.exports = function(s,config,lang){
             }
             user.details = s.parseJSON(user.details)
             user.permissions = {}
-            s.api[generatedId] = Object.assign(user,additionalData)
+            s.api[generatedId] = Object.assign({},user,additionalData)
             return generatedId
         }
     }
     var editSession = function(user,additionalData){
         if(user){
             if(!additionalData)additionalData = {}
-            Object.keys(additionalData).forEach(function(value,key){
-                s.api[user.auth][key] = value
-            })
+            Object.assign(s.api[user.auth], additionalData)
         }
     }
     var failHttpAuthentication = function(res,req,message){
@@ -135,58 +167,53 @@ module.exports = function(s,config,lang){
                 activeSession &&
                 (
                     activeSession.ip.indexOf('0.0.0.0') > -1 ||
-                    activeSession.ip.indexOf(params.ip) > -1
+                    params.ip.indexOf(activeSession.ip) > -1
                 )
             ){
                 if(!user.lang){
                     var details = s.parseJSON(user.details).lang
-                    user.lang = s.getDefinitonFile(user.details.lang) || s.copySystemDefaultLanguage()
+                    user.lang = s.getLanguageFile(user.details.lang) || s.copySystemDefaultLanguage()
                 }
                 onSuccessComplete(user)
             }else{
                 onFail()
             }
         }
-        if(s.group[params.ke] && s.group[params.ke].users && s.group[params.ke].users[params.auth]){
+        if(s.group[params.ke] && s.group[params.ke].users && s.group[params.ke].users[params.auth] && s.group[params.ke].users[params.auth].details){
             var activeSession = s.group[params.ke].users[params.auth]
             activeSession.permissions = {}
             if(!activeSession.lang){
                 activeSession.lang = s.copySystemDefaultLanguage()
             }
             onSuccessComplete(activeSession)
-        }else{
-            if(s.api[params.auth] && s.api[params.auth].details){
-                var activeSession = s.api[params.auth]
-                onSuccess(activeSession)
-                if(activeSession.timeout){
-                   resetActiveSessionTimer(activeSession)
-                }
-            }else{
-                if(params.username && params.username !== '' && params.password && params.password !== ''){
-                    loginWithUsernameAndPassword(params,'*',function(err,user){
-                        if(user){
-                            params.auth = user.auth
-                            createSession(user)
-                            resetActiveSessionTimer(s.api[params.auth])
-                            onSuccess(user)
-                        }else{
-                            onFail()
-                        }
-                    })
-                }else{
-                    loginWithApiKey(params,function(err,user,isSessionKey){
-                        if(isSessionKey)resetActiveSessionTimer(s.api[params.auth])
-                        if(user){
-                            createSession(user,{
-                                auth: params.auth
-                            })
-                            onSuccess(s.api[params.auth])
-                        }else{
-                            onFail()
-                        }
-                    })
-                }
+        }else if(s.api[params.auth] && s.api[params.auth].details){
+            var activeSession = s.api[params.auth]
+            onSuccess(activeSession)
+            if(activeSession.timeout){
+               resetActiveSessionTimer(activeSession)
             }
+        }else if(params.username && params.username !== '' && params.password && params.password !== ''){
+            loginWithUsernameAndPassword(params,'*',function(err,user){
+                if(user){
+                    params.auth = user.auth
+                    createSession(user)
+                    resetActiveSessionTimer(s.api[params.auth])
+                    onSuccess(user)
+                }else{
+                    onFail()
+                }
+            })
+        }else if(params.auth && params.ke){
+            loginWithApiKey(params,function(err,user,isSessionKey){
+                if(isSessionKey)resetActiveSessionTimer(s.api[params.auth])
+                if(user){
+                    onSuccess(s.api[params.auth])
+                }else{
+                    onFail()
+                }
+            })
+        } else {
+            onFail()
         }
     }
     //super user authentication handler
@@ -212,32 +239,18 @@ module.exports = function(s,config,lang){
                     if(userSelected){
                         resp.$user = userSelected
                     }
-                    if(adminUsersSelected){
-                        resp.users = adminUsersSelected
-                    }
                 }
                 callback({
                     ip : ip,
                     $user: userSelected,
-                    users: adminUsersSelected,
                     config: chosenConfig,
-                    lang:lang
+                    lang: lang
                 })
-            }
-            var foundUser = function(){
-                if(params.users === true){
-                    s.sqlQuery('SELECT * FROM Users WHERE details NOT LIKE ?',['%"sub"%'],function(err,r) {
-                        adminUsersSelected = r
-                        success()
-                    })
-                }else{
-                    success()
-                }
             }
             if(params.auth && Object.keys(s.superUsersApi).indexOf(params.auth) > -1){
                 userFound = true
                 userSelected = s.superUsersApi[params.auth].$user
-                foundUser()
+                success()
             }else{
                 var superUserList = JSON.parse(fs.readFileSync(s.location.super))
                 superUserList.forEach(function(superUser,n){
@@ -258,7 +271,7 @@ module.exports = function(s,config,lang){
                     ){
                         userFound = true
                         userSelected = superUser
-                        foundUser()
+                        success()
                     }
                 })
             }
@@ -278,7 +291,7 @@ module.exports = function(s,config,lang){
     }
     s.basicOrApiAuthentication = function(username,password,callback){
         var splitUsername = username.split('@')
-        if(splitUsername[1] && splitUsername[1].toLowerCase().indexOf('sageteaviewcctv') > -1){
+        if(splitUsername[1] && splitUsername[1].toLowerCase().indexOf('shinobi') > -1){
             getApiKey({
                 auth: splitUsername[0],
                 ke: password

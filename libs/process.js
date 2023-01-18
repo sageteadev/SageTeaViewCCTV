@@ -3,7 +3,7 @@ module.exports = function(process,__dirname){
     var packageJson = require('../package.json')
     process.send = process.send || function () {};
     process.on('uncaughtException', function (err) {
-        console.error('Uncaught Exception occured!');
+        console.error(`Uncaught Exception occured! ${new Date()}`);
         console.error(err.stack);
     });
     // [CTRL] + [C] = exit
@@ -31,7 +31,10 @@ module.exports = function(process,__dirname){
         //UTC Offset
         utcOffset : require('moment')().utcOffset(),
         //directory path for this file
-        mainDirectory : __dirname
+        mainDirectory : process.cwd(),
+        //time start
+        timeStarted : new Date()
+
     }
     s.packageJson = packageJson
     if(packageJson.mainDirectory){

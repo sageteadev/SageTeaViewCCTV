@@ -1,25 +1,19 @@
 var fs = require('fs')
 var express = require('express')
+const {
+    mergeDeep
+} = require('./common.js')
+const frameworkBase = require(`../definitions/base.js`)
 module.exports = function(s,config,lang,app,io){
-    s.location.definitions = s.mainDirectory+'/definitions'
-    try{
-        var definitions = require(s.location.definitions+'/'+config.language+'.js')(s,config,lang)
-    }catch(er){
-        console.error(er)
-        console.log('There was an error loading your definition file.')
-        try{
-            var definitions = require(s.location.definitions+'/en_CA.js')(s,config,lang)
-        }catch(er){
-            console.error(er)
-            console.log('There was an error loading your definition file.')
-            var definitions = require(s.location.definitions+'/en_CA.json');
-        }
+    function getFramework(languageFile){
+        return frameworkBase(s,config,languageFile)
     }
+    const defaultFramework = getFramework(lang)
     //load defintions dynamically
-    s.definitions = definitions
+    s.definitions = defaultFramework
     s.copySystemDefaultDefinitions = function(){
         //en_CA
-        return Object.assign(s.definitions,{})
+        return Object.assign({},defaultFramework)
     }
     s.loadedDefinitons={}
     s.loadedDefinitons[config.language] = s.copySystemDefaultDefinitions()
@@ -28,10 +22,15 @@ module.exports = function(s,config,lang,app,io){
             var file = s.loadedDefinitons[rule]
             if(!file){
                 try{
-                    s.loadedDefinitons[rule] = require(s.location.definitions+'/'+rule+'.js')(s,config,lang)
-                    s.loadedDefinitons[rule] = Object.assign(s.copySystemDefaultDefinitions(),s.loadedDefinitons[rule])
+                    // console.log(getFramework(lang))
+                    s.loadedDefinitons[rule] = Object.assign(
+                        {},
+                        s.copySystemDefaultDefinitions(),
+                        getFramework(s.getLanguageFile(rule))
+                    );
                     file = s.loadedDefinitons[rule]
                 }catch(err){
+                    console.error(err)
                     file = s.copySystemDefaultDefinitions()
                 }
             }
@@ -40,5 +39,9 @@ module.exports = function(s,config,lang,app,io){
         }
         return file
     }
-    return definitions
+    s.reloadDefinitions = function(){
+        s.loadedDefinitons = {};
+        s.loadedDefinitons[config.language] = s.copySystemDefaultDefinitions()
+    }
+    return defaultFramework
 }

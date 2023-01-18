@@ -1,200 +1,22 @@
 <!--Confirmation Window-->
 <div class="modal fade full" id="add_edit" tabindex="-1" role="dialog" aria-labelledby="permissionsLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
-    <form class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title" id="permissionsLabel"><i class="fa fa-lock"></i> &nbsp; <span id="title"></span></h4>
+    <form class="modal-content" style="background:transparent">
+      <div>
+          <%
+            var drawBlock
+            var buildOptions
+          %>
+          <%
+            include home/fieldBuilders.ejs
+          %>
+          <% Object.keys(define['Admin Account Settings'].blocks).forEach(function(blockKey){
+                var accountSettings = define['Admin Account Settings'].blocks[blockKey]
+                drawBlock(accountSettings)
+            }) %>
       </div>
-      <div class="modal-body" style="max-height:600px;overflow:auto">
-        <div class="form-group">
-            <label>
-                <div><span><%-lang.Email%></span></div>
-                <div><input class="form-control" type="email" name="mail"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['Group Key']%> <small><%-lang['Leave blank for random.']%></small></span></div>
-                <div><input class="form-control" name="ke"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang.Password%> <small class="h_e_input h_e_edit"><%-lang.blankPassword%></small></span></div>
-                <div><input class="form-control" type="password" name="pass"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['Password Again']%></span></div>
-                <div><input class="form-control" type="password" name="password_again"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['2-Factor Authentication']%> (<%-lang.Email%>)</span></div>
-                    <div><select class="form-control" detail="factorAuth">
-                        <option value="0" selected><%-lang.No%></option>
-                        <option value="1"><%-lang.Yes%></option>
-                    </select></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['Max Storage Amount']%></span></div>
-                <div><input class="form-control" detail="size" placeholder="10000"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['Number of Days to keep']%> <b><%-lang.Videos%></b></span></div>
-                <div><input class="form-control" detail="days" placeholder="5"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['Number of Days to keep']%> <b><%-lang.Events%></b></span></div>
-                <div><input class="form-control" detail="event_days" placeholder="10"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['Number of Days to keep']%> <b><%-lang.Logs%></b></span></div>
-                <div><input class="form-control" detail="log_days" placeholder="10"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['Max Number of Cameras']%></span></div>
-                <div><input class="form-control" detail="max_camera" placeholder="<%-lang['Leave blank for unlimited']%>"></div>
-            </label>
-        </div>
-        <div class="form-group">
-            <label><div><span><%-lang['Permissions']%></span></div>
-                <div><select class="form-control" detail="permissions" selector="h_l">
-                    <option value="all" selected><%-lang['All Privileges']%></option>
-                    <option value="limited"><%-lang.Limited%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can edit Max Storage']%></span></div>
-                <div><select class="form-control" detail="edit_size">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can edit Max Days']%></span></div>
-                <div><select class="form-control" detail="edit_days">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can edit how long to keep Events']%> <small><%-lang['in Days']%></small></span></div>
-                <div><select class="form-control" detail="edit_event_days">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can edit how long to keep Logs']%> <small><%-lang['in Days']%></small></span></div>
-                <div><select class="form-control" detail="edit_log_days">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can use Admin Panel']%></span></div>
-                <div><select class="form-control" detail="use_admin">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can use Amazon S3']%></span></div>
-                <div><select class="form-control" detail="use_aws_s3">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can use Wasabi Hot Cloud Storage']%></span></div>
-                <div><select class="form-control" detail="use_whcs">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can use SFTP']%></span></div>
-                <div><select class="form-control" detail="use_sftp">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can use WebDAV']%></span></div>
-                <div><select class="form-control" detail="use_webdav">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can use Discord Bot']%></span></div>
-                <div><select class="form-control" detail="use_discordbot">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Can use LDAP']%></span></div>
-                <div><select class="form-control" detail="use_ldap">
-                    <option value="1" selected><%-lang.Yes%></option>
-                    <option value="0"><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Use Global Amazon S3 Video Storage']%></span></div>
-                <div><select class="form-control" detail="aws_use_global">
-                    <option value="1"><%-lang.Yes%></option>
-                    <option value="0" selected><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Use Global Backblaze B2 Video Storage']%></span></div>
-                <div><select class="form-control" detail="b2_use_global">
-                    <option value="1"><%-lang.Yes%></option>
-                    <option value="0" selected><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-        <div class="form-group h_l_input h_l_limited">
-            <label><div><span><%-lang['Use Global WebDAV Video Storage']%></span></div>
-                <div><select class="form-control" detail="webdav_use_global">
-                    <option value="1"><%-lang.Yes%></option>
-                    <option value="0" selected><%-lang.No%></option>
-                </select></div>
-            </label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><i class="fa fa-times"></i> <%-lang.Close%></button>
-
-            <div class="pull-left" style="display:none">
-            <div class="marc-toggle display-inline">
-                <input type="checkbox" id="edit"/><label for="edit">Add or Edit</label>
-            </div>
-            </div>
-          <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> <%-lang.Save%></button>
-        </div>
-        <input type="hidden" name="details" value="{}">
+      <input style="display:none" type="checkbox" id="edit"/>
+      <input type="hidden" name="details" value="{}">
     </form>
   </div>
 </div>
@@ -202,8 +24,7 @@
 //add new
 $.aN={e:$('#add_edit')};$.aN.f=$.aN.e.find('form')
 $.aN.modeIsEdit = function(){return $('#edit').is(':checked')}
-$.aN.f.submit(function(e){
-    e.preventDefault();
+function saveAccountSettings(){
     var formValues = $.aN.f.serializeObject()
     var postData = {
         data: formValues
@@ -213,18 +34,25 @@ $.aN.f.submit(function(e){
         webPath = 'editAdmin'
         postData.account = $.aN.selected
     }
-    $.post('<%=originalURL%><%=config.webPaths.superApiPrefix%>'+$user.sessionKey+'/accounts/'+webPath,postData,function(data){
+    $.post(superApiPrefix + $user.sessionKey+'/accounts/'+webPath,postData,function(data){
         console.log(data)
         if(data.ok === true){
             $.aN.e.modal('hide')
         }
     })
+}
+$.aN.f.submit(function(e){
+    e.preventDefault();
+    saveAccountSettings()
     return false;
+})
+$.aN.f.find('.submit').click(function(e){
+    saveAccountSettings()
 })
 //client side email check
 $.aN.e.on('change','[name="mail"]',function(){
     var thisVal = $(this).val()
-    $.each(users,function(n,user){
+    $.each(loadedUsers,function(n,user){
         if($.aN.selected && user.ke !== $.aN.selected.ke && thisVal.toLowerCase() === user.mail.toLowerCase()){
             new PNotify({text:lang['Email address is in use.'],type:'error'})
         }
@@ -233,7 +61,7 @@ $.aN.e.on('change','[name="mail"]',function(){
 //client side group key check
 $.aN.e.on('change','[name="ke"]',function(){
     var thisVal = $(this).val()
-    $.each(users,function(n,user){
+    $.each(loadedUsers,function(n,user){
         if(!$.aN.modeIsEdit() && user.ke === thisVal){
             new PNotify({text:lang['Group Key is in use.'] + ' ' + lang['Create Sub-Accounts at /admin'],type:'error'})
         }
@@ -279,7 +107,7 @@ $.aN.e.find('[detail="permissions"]').change(function(){
     }
 })
 //simple lister
-$.aC={e:$('#accounts')};$.aC.t=$.aC.e.find('table')
+$.aC={e:$('#accounts')};
 $.aC.e.on('click','.add',function(e){
     $.aN.selected = null
     $.aN.e.modal('show')
@@ -287,7 +115,7 @@ $.aC.e.on('click','.add',function(e){
     $.aN.f[0].reset()
 })
 $.aC.e.on('click','.delete',function(e){
-    e.e=$(this).parents('tr');
+    e.e=$(this).parents('.user-row');
     e.u=e.e.attr('ke');
     e.account=$.ccio.accounts[e.u];
     $.confirm.e.modal('show');
@@ -295,8 +123,7 @@ $.aC.e.on('click','.delete',function(e){
     e.html='Do you want to delete <b>'+e.account.mail+'</b>? You cannot recover this account. Files will remain in the filesystem. If you choose to create an account with the same Group Key it will have the previous events activated in that account.'
     $.confirm.body.html(e.html)
     $.confirm.click({title:'Delete',class:'btn-danger'},function(){
-        // $.ccio.cx({f:'accounts',ff:'delete',account:e.account})
-        $.post('<%=originalURL%><%=config.webPaths.superApiPrefix%>'+$user.sessionKey+'/accounts/deleteAdmin',{
+        $.post(superApiPrefix + $user.sessionKey+'/accounts/deleteAdmin',{
             account : e.account,
             // "deleteSubAccounts" : "1",
             // "deleteMonitors" : "1",
@@ -313,7 +140,7 @@ $.aC.e.on('click','.delete',function(e){
 $.aC.e.on('click','.permission',function(e){
     $('#edit').prop('checked',true).change().parent().addClass('is-checked')
     $.aN.e.modal('show')
-    e.e=$(this).parents('tr');
+    e.e=$(this).parents('.user-row');
     e.u=e.e.attr('ke');
     e.account=$.ccio.accounts[e.u];
     $.aN.selected=e.account;

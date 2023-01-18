@@ -1,0 +1,51 @@
+.shinobi-bg-shade{
+    position:absolute;
+    height:100%;
+    width:100%;
+}
+.bg-none {
+    background: transparent;
+}
+.monospace{
+    font-family: monospace;
+}
+.full-height {
+    height: 100%;
+}
+.vertical-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.text-color {
+    color: #28b391!important;
+}
+.text-white {
+    color: #fff!important;
+}
+hr.divider {
+    border-top: 1px solid #595959;
+    background-color: initial;
+}
+#page-contents {
+    background: #334a6d;
+}
+.social-link.btn {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    font-size: 1.2rem;
+    border: 0;
+}
+.card label {
+    color: #fff;
+}
+#login-submit {
+    background: #2596fb;
+}
+#remember_me {
+    width: 15px;
+    height: 15px;
+    transform: translate(0px, 3px);
+}

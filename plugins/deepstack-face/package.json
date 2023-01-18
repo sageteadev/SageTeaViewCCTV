@@ -1,0 +1,26 @@
+{
+   "name": "shinobi-deepstack-face",
+   "author": "Elad Bar",
+   "version": "1.0.0",
+   "description": "Face Recognition plugin for DeepStack / CodeProject AI",
+   "main": "shinobi-deepstack-face.js",
+   "dependencies": {
+      "request": "^2.88.0",
+      "express": "^4.16.2",
+      "moment": "^2.19.2",
+      "socket.io": "^4.4.1",
+      "socket.io-client": "^4.4.1"
+   },
+   "devDependencies": {},
+   "bin": "shinobi-deepstack-face.js",
+   "pkg": {
+      "targets": [
+         "node12"
+      ],
+      "scripts": [
+         "../pluginBase.js"
+      ],
+      "assets": []
+   },
+   "disabled": true
+}

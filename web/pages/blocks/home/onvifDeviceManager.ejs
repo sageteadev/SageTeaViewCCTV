@@ -1,0 +1,21 @@
+<main class="container page-tab pt-3" id="tab-onvifDeviceManager">
+    <form class="dark row">
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+          include fieldBuilders.ejs
+        %>
+        <% Object.keys(define['ONVIF Device Manager'].blocks).forEach(function(blockKey){
+              var accountSettings = define['ONVIF Device Manager'].blocks[blockKey]
+              drawBlock(accountSettings)
+          }) %>
+      <div class="col-md-12">
+      <%
+        include stickySubmitBar.ejs
+      %>
+      </div>
+    </form>
+</main>
+<script src="<%-window.libURL%>assets/js/bs5.onvifDeviceManager.js"></script>

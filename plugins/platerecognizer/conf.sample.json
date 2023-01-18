@@ -1,0 +1,11 @@
+{
+    "plug": "PlateRecognizer",
+    "host": "localhost",
+    "platerecognizerApiKey": "11111111111111111",
+    "port": 8080,
+    "hostPort": 58084,
+    "key": "1234567890",
+    "mode": "client",
+    "type": "detector",
+    "enabled": false
+}

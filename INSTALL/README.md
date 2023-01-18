@@ -11,7 +11,7 @@
 2. Download and run the installer.
 
 ```
-bash <(curl -s https://raw.githubusercontent.com/SageTeaViewCCTV/Shinobi-Installer/master/shinobi-install.sh)
+bash <(curl -s https://raw.githubusercontent.com/ShinobiCCTV/Shinobi-Installer/master/shinobi-install.sh)
 ```
 
 More info can be found here. https://shinobi.video/docs/start

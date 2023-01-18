@@ -1,0 +1,15 @@
+<main class="page-tab pt-3" id="tab-onvifScanner">
+    <form class="dark row">
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+          include fieldBuilders.ejs
+        %>
+        <% Object.keys(define['ONVIF Scanner'].blocks).forEach(function(blockKey){
+              var accountSettings = define['ONVIF Scanner'].blocks[blockKey]
+              drawBlock(accountSettings)
+          }) %>
+    </form>
+</main>

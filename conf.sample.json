@@ -1,7 +1,14 @@
 {
   "port": 8080,
+  "debugLog": false,
+  "videosDir": "__DIR__/videos",
   "passwordType": "sha256",
   "detectorMergePamRegionTriggers": true,
+  "wallClockTimestampAsDefault": true,
+  "useBetterP2P": true,
+  "smtpServerOptions": {
+      "allowInsecureAuth": true
+  },
   "addStorage": [
       {"name":"second","path":"__DIR__/videos2"}
   ],

@@ -57,12 +57,37 @@ module.exports = function(s,config){
         splitted[1] = user + ':' + pass + '@' + splitted[1]
         return splitted.join('://')
     }
-    s.checkCorrectPathEnding = function(x){
-        var length=x.length
-        if(x.charAt(length-1)!=='/'){
-            x=x+'/'
+    s.checkCorrectPathEnding = function(x,reverse){
+        var newString = `${x}`
+        var length = x.length
+        if(reverse && x.charAt(length-1) === '/'){
+            newString = x.slice(0, -1)
+        }else if(x.charAt(length-1) !== '/'){
+            newString = x + '/'
         }
-        return x.replace('__DIR__',s.mainDirectory)
+        return newString.replace('__DIR__',s.mainDirectory)
+    }
+    s.mergeDeep = function(...objects) {
+      const isObject = obj => obj && typeof obj === 'object';
+
+      return objects.reduce((prev, obj) => {
+        Object.keys(obj).forEach(key => {
+          const pVal = prev[key];
+          const oVal = obj[key];
+
+          if (Array.isArray(pVal) && Array.isArray(oVal)) {
+            prev[key] = pVal.concat(...oVal);
+          }
+          else if (isObject(pVal) && isObject(oVal)) {
+            prev[key] = s.mergeDeep(pVal, oVal);
+          }
+          else {
+            prev[key] = oVal;
+          }
+        });
+
+        return prev;
+      }, {});
     }
     s.md5 = function(x){return crypto.createHash('md5').update(x).digest("hex")}
     s.createHash = s.md5
@@ -122,44 +147,6 @@ module.exports = function(s,config){
     }else{
         s.timeObject = moment
     }
-    s.ipRange=function(start_ip, end_ip) {
-      var start_long = s.toLong(start_ip);
-      var end_long = s.toLong(end_ip);
-      if (start_long > end_long) {
-        var tmp=start_long;
-        start_long=end_long
-        end_long=tmp;
-      }
-      var range_array = [];
-      var i;
-      for (i=start_long; i<=end_long;i++) {
-        range_array.push(s.fromLong(i));
-      }
-      return range_array;
-    }
-    s.portRange=function(lowEnd,highEnd){
-        var list = [];
-        for (var i = lowEnd; i <= highEnd; i++) {
-            list.push(i);
-        }
-        return list;
-    }
-    //toLong taken from NPM package 'ip'
-    s.toLong=function(ip) {
-      var ipl = 0;
-      ip.split('.').forEach(function(octet) {
-        ipl <<= 8;
-        ipl += parseInt(octet);
-      });
-      return(ipl >>> 0);
-    }
-    //fromLong taken from NPM package 'ip'
-    s.fromLong=function(ipl) {
-      return ((ipl >>> 24) + '.' +
-          (ipl >> 16 & 255) + '.' +
-          (ipl >> 8 & 255) + '.' +
-          (ipl & 255) );
-    }
     s.getFunctionParamNames = function(func) {
       var fnStr = func.toString().replace(/((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg, '');
       var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(/([^\s,]+)/g);
@@ -187,20 +174,27 @@ module.exports = function(s,config){
         if(!e){e=''}
         if(config.systemLog===true){
             if(typeof q==='string'&&s.databaseEngine){
-                s.sqlQuery('INSERT INTO Logs (ke,mid,info) VALUES (?,?,?)',['$','$SYSTEM',s.s({type:q,msg:w})]);
+                s.knexQuery({
+                    action: "insert",
+                    table: "Logs",
+                    insert: {
+                        ke: '$',
+                        mid: '$SYSTEM',
+                        info: s.s({type:q,msg:w}),
+                    }
+                })
                 s.tx({f:'log',log:{time:s.timeObject(),ke:'$',mid:'$SYSTEM',time:s.timeObject(),info:s.s({type:q,msg:w})}},'$');
             }
             return console.log(s.timeObject().format(),q,w,e)
         }
     }
     //system log
-    s.debugLog = function(q,w,e){
+    s.debugLog = function(...args){
         if(config.debugLog === true){
-            if(!w){w = ''}
-            if(!e){e = ''}
-            console.log(s.timeObject().format(),q,w,e)
+            var logRow = ([s.timeObject().format()]).concat(...args)
+            console.log(...logRow)
             if(config.debugLogVerbose === true){
-                console.log(new Error())
+                console.log(new Error('VERBOSE STACK TRACE, THIS IS NOT AN '))
             }
         }
     }
@@ -221,15 +215,32 @@ module.exports = function(s,config){
             break;
             case'delete':
                 if(!e){return false;}
-                return exec('rm -f '+e,{detached: true},function(err){
-                    if(callback)callback(err)
+                fs.rm(e,(err)=>{
+                    if(err){
+                        s.debugLog(err)
+                        if(s.isWin){
+                            exec('rd /s /q "' + e + '"',{detached: true},function(err){
+                                if(callback)callback(err)
+                            })
+                        }else{
+                            exec('rm -rf '+e,{detached: true},function(err){
+                                if(callback)callback(err)
+                            })
+                        }
+                    }
                 })
             break;
             case'deleteFolder':
                 if(!e){return false;}
-                exec('rm -rf '+e,{detached: true},function(err){
-                    if(callback)callback(err)
-                })
+                if(s.isWin){
+                    exec('rd /s /q "' + e + '"',{detached: true},function(err){
+                        if(callback)callback(err)
+                    })
+                }else{
+                    exec('rm -rf '+e,{detached: true},function(err){
+                        if(callback)callback(err)
+                    })
+                }
             break;
             case'deleteFiles':
                 if(!e.age_type){e.age_type='min'};if(!e.age){e.age='1'};
@@ -283,7 +294,7 @@ module.exports = function(s,config){
     }
     s.kilobyteToMegabyte = function(kb,places){
         if(!places)places = 2
-        return (kb/1000000).toFixed(places)
+        return (kb/1048576).toFixed(places)
     }
     Object.defineProperty(Array.prototype, 'chunk', {
         value: function(chunkSize){

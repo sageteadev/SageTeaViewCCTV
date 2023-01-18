@@ -1,39 +1,72 @@
 var fs = require('fs');
 var os = require('os');
 var moment = require('moment')
-var request = require('request')
-var jsonfile = require("jsonfile")
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var execSync = require('child_process').execSync;
 module.exports = function(s,config,lang,app){
+    const {
+        deleteMonitorData,
+    } = require('./monitor/utils.js')(s,config,lang)
     /**
     * API : Administrator : Edit Sub-Account (Account to share cameras with)
     */
     app.all(config.webPaths.adminApiPrefix+':auth/accounts/:ke/edit', function (req,res){
-        s.auth(req.params,function(user){
+        s.auth(req.params,async (user) => {
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             var form = s.getPostData(req)
             var uid = form.uid || s.getPostData(req,'uid',false)
-            var mail = form.mail || s.getPostData(req,'mail',false)
+            var mail = (form.mail || s.getPostData(req,'mail',false) || '').trim()
             if(form){
                 var keys = ['details']
-                var condition = []
-                var value = []
-                keys.forEach(function(v){
-                    condition.push(v+'=?')
-                    if(form[v] instanceof Object)form[v] = JSON.stringify(form[v])
-                    value.push(form[v])
+                form.details = s.parseJSON(form.details) || {"sub": 1, "allmonitors": "1"}
+                form.details.sub = 1
+                const updateQuery = {
+                    details: s.stringJSON(form.details)
+                }
+                if(form.pass && form.pass === form.password_again){
+                    updateQuery.pass = s.createHash(form.pass)
+                }
+                if(form.mail){
+                    const userCheck = await s.knexQueryPromise({
+                        action: "select",
+                        columns: "*",
+                        table: "Users",
+                        where: [
+                            ['mail','=',form.mail],
+                        ]
+                    })
+                    if(userCheck.rows[0]){
+                        const foundUser = userCheck.rows[0]
+                        if(foundUser.uid === form.uid){
+                            updateQuery.mail = form.mail
+                        }else{
+                            endData.msg = lang['Email address is in use.']
+                            s.closeJsonResponse(res,endData)
+                            return
+                        }
+                    }else{
+                        updateQuery.mail = form.mail
+                    }
+                }
+                await s.knexQueryPromise({
+                    action: "update",
+                    table: "Users",
+                    update: updateQuery,
+                    where: [
+                        ['ke','=',req.params.ke],
+                        ['uid','=',uid],
+                    ]
                 })
-                value = value.concat([req.params.ke,uid])
-                s.sqlQuery("UPDATE Users SET "+condition.join(',')+" WHERE ke=? AND uid=?",value)
                 s.tx({
                     f: 'edit_sub_account',
                     ke: req.params.ke,
@@ -42,7 +75,15 @@ module.exports = function(s,config,lang,app){
                     form: form
                 },'ADM_'+req.params.ke)
                 endData.ok = true
-                s.sqlQuery("SELECT * FROM API WHERE ke=? AND uid=?",[req.params.ke,uid],function(err,rows){
+                s.knexQuery({
+                    action: "select",
+                    columns: "*",
+                    table: "API",
+                    where: [
+                        ['ke','=',req.params.ke],
+                        ['uid','=',uid],
+                    ]
+                },function(err,rows){
                     if(rows && rows[0]){
                         rows.forEach(function(row){
                             delete(s.api[row.code])
@@ -60,34 +101,104 @@ module.exports = function(s,config,lang,app){
     */
     app.all(config.webPaths.adminApiPrefix+':auth/accounts/:ke/delete', function (req,res){
         s.auth(req.params,function(user){
+            const groupKey = req.params.ke;
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             var form = s.getPostData(req) || {}
             var uid = form.uid || s.getPostData(req,'uid',false)
-            var mail = form.mail || s.getPostData(req,'mail',false)
-            s.sqlQuery('DELETE FROM Users WHERE uid=? AND ke=? AND mail=?',[uid,req.params.ke,mail])
-            s.sqlQuery("SELECT * FROM API WHERE ke=? AND uid=?",[req.params.ke,uid],function(err,rows){
-                if(rows && rows[0]){
-                    rows.forEach(function(row){
-                        delete(s.api[row.code])
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Users",
+                where: [
+                    ['ke','=',groupKey],
+                    ['uid','=',uid],
+                ]
+            },function(err,usersFound){
+                const theUserUpForDeletion = usersFound[0]
+                if(theUserUpForDeletion){
+                    s.knexQuery({
+                        action: "delete",
+                        table: "Users",
+                        where: {
+                            ke: groupKey,
+                            uid: uid,
+                        }
                     })
-                    s.sqlQuery('DELETE FROM API WHERE uid=? AND ke=?',[uid,req.params.ke])
+                    s.knexQuery({
+                        action: "select",
+                        columns: "*",
+                        table: "API",
+                        where: [
+                            ['ke','=',groupKey],
+                            ['uid','=',uid],
+                        ]
+                    },function(err,rows){
+                        if(rows && rows[0]){
+                            rows.forEach(function(row){
+                                delete(s.api[row.code])
+                            })
+                            s.knexQuery({
+                                action: "delete",
+                                table: "API",
+                                where: {
+                                    ke: groupKey,
+                                    uid: uid,
+                                }
+                            })
+                        }
+                    })
+                    s.tx({
+                        f: 'delete_sub_account',
+                        ke: groupKey,
+                        uid: uid,
+                        mail: theUserUpForDeletion.mail
+                    },'ADM_'+groupKey)
+                    endData.ok = true
+                }else{
+                    endData.msg = user.lang['User Not Found']
                 }
+                s.closeJsonResponse(res,endData)
             })
-            s.tx({
-                f: 'delete_sub_account',
-                ke: req.params.ke,
-                uid: uid,
-                mail: mail
-            },'ADM_'+req.params.ke)
-            endData.ok = true
-            s.closeJsonResponse(res,endData)
+        },res,req)
+    })
+    /**
+    * API : Administrator : Get Sub-Account List
+    */
+    app.get(config.webPaths.adminApiPrefix+':auth/accounts/:ke', function (req,res){
+        s.auth(req.params,function(user){
+            var endData = {
+                ok : false
+            }
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
+                return
+            }else{
+                endData.ok = true
+                s.knexQuery({
+                    action: "select",
+                    columns: "ke,uid,mail,details",
+                    table: "Users",
+                    where: [
+                        ['ke','=',req.params.ke],
+                        ['details','LIKE','%"sub"%']
+                    ]
+                },function(err,rows){
+                    endData.accounts = rows
+                    s.closeJsonResponse(res,endData)
+                })
+            }
         },res,req)
     })
     /**
@@ -104,28 +215,48 @@ module.exports = function(s,config,lang,app){
         }
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.details.sub){
-                endData.msg = user.lang['Not an Administrator Account']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             var form = s.getPostData(req)
             if(form.mail !== '' && form.pass !== ''){
                 if(form.pass === form.password_again || form.pass === form.pass_again){
-                    s.sqlQuery('SELECT * FROM Users WHERE mail=?',[form.mail],function(err,r) {
-                        if(r&&r[0]){
+                    s.knexQuery({
+                        action: "select",
+                        columns: "*",
+                        table: "Users",
+                        where: [
+                            ['mail','=',form.mail],
+                        ]
+                    },function(err,r){
+                        if(r && r[0]){
                             //found one exist
-                            endData.msg = 'Email address is in use.'
+                            endData.msg = lang['Email address is in use.']
                         }else{
                             //create new
                             endData.msg = 'New Account Created'
                             endData.ok = true
                             var newId = s.gid()
-                            var details = s.s({
-                                sub: "1",
+                            var details = s.s(Object.assign({
                                 allmonitors: "1"
+                            },s.parseJSON(form.details) || {}, {
+                                sub: "1",
+                            }))
+                            s.knexQuery({
+                                action: "insert",
+                                table: "Users",
+                                insert: {
+                                    ke: req.params.ke,
+                                    uid: newId,
+                                    mail: form.mail,
+                                    pass: s.createHash(form.pass),
+                                    details: details,
+                                }
                             })
-                            s.sqlQuery('INSERT INTO Users (ke,uid,mail,pass,details) VALUES (?,?,?,?,?)',[req.params.ke,newId,form.mail,s.createHash(form.pass),details])
                             s.tx({
                                 f: 'add_sub_account',
                                 details: details,
@@ -167,7 +298,26 @@ module.exports = function(s,config,lang,app){
         }
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            if(
+                userPermissions.monitor_create_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_monitor_edit`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return
+            }
             if(req.params.f !== 'delete'){
                 var form = s.getPostData(req)
                 if(!form){
@@ -176,62 +326,46 @@ module.exports = function(s,config,lang,app){
                    return
                 }
                 form.mid = req.params.id.replace(/[^\w\s]/gi,'').replace(/ /g,'')
-                if(!user.details.sub ||
-                   user.details.allmonitors === '1' ||
-                   hasRestrictions && user.details.monitor_edit.indexOf(form.mid) >- 1 ||
-                   hasRestrictions && user.details.monitor_create === '1'){
-                        if(form && form.name){
-                            s.checkDetails(form)
-                            form.ke = req.params.ke
-                            s.addOrEditMonitor(form,function(err,endData){
-                                res.end(s.prettyPrint(endData))
-                            },user)
-                        }else{
-                            endData.msg = user.lang.monitorEditText1;
-                            res.end(s.prettyPrint(endData))
-                        }
-                }else{
-                        endData.msg = user.lang['Not Permitted']
+                if(form && form.name){
+                    s.checkDetails(form)
+                    form.ke = req.params.ke
+                    s.addOrEditMonitor(form,function(err,endData){
                         res.end(s.prettyPrint(endData))
+                    },user)
+                }else{
+                    endData.msg = user.lang.monitorEditText1;
+                    res.end(s.prettyPrint(endData))
                 }
             }else{
-                if(!user.details.sub || user.details.allmonitors === '1' || user.details.monitor_edit.indexOf(req.params.id) > -1 || hasRestrictions && user.details.monitor_create === '1'){
-                    s.userLog(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{type:'Monitor Deleted',msg:'by user : '+user.uid});
-                    req.params.delete=1;s.camera('stop',req.params);
-                    s.tx({f:'monitor_delete',uid:user.uid,mid:req.params.id,ke:req.params.ke},'GRP_'+req.params.ke);
-                    s.sqlQuery('DELETE FROM Monitors WHERE ke=? AND mid=?',[req.params.ke,req.params.id])
-    //                s.sqlQuery('DELETE FROM Files WHERE ke=? AND mid=?',[req.params.ke,req.params.id])
-                    if(req.query.deleteFiles === 'true'){
-                        //videos
-                        s.dir.addStorage.forEach(function(v,n){
-                            var videosDir = v.path+req.params.ke+'/'+req.params.id+'/'
-                            fs.stat(videosDir,function(err,stat){
-                                if(!err){
-                                    s.file('deleteFolder',videosDir)
-                                }
-                            })
-                        })
-                        var videosDir = s.dir.videos+req.params.ke+'/'+req.params.id+'/'
-                        fs.stat(videosDir,function(err,stat){
-                            if(!err){
-                                s.file('deleteFolder',videosDir)
-                            }
-                        })
-                        //fileBin
-                        var binDir = s.dir.fileBin+req.params.ke+'/'+req.params.id+'/'
-                        fs.stat(binDir,function(err,stat){
-                            if(!err){
-                                s.file('deleteFolder',binDir)
-                            }
-                        })
+                s.userLog({
+                    ke: req.params.ke,
+                    mid: req.params.id
+                },{
+                    type: 'Monitor Deleted',
+                    msg: 'by user : '+user.uid
+                });
+                req.params.delete=1;
+                s.camera('stop',req.params);
+                s.tx({f:'monitor_delete',uid:user.uid,mid:req.params.id,ke:req.params.ke},'GRP_'+req.params.ke);
+                s.knexQuery({
+                    action: "delete",
+                    table: "Monitors",
+                    where: {
+                        ke: req.params.ke,
+                        mid: req.params.id,
                     }
-                    endData.ok=true;
-                    endData.msg='Monitor Deleted by user : '+user.uid
-                    res.end(s.prettyPrint(endData))
-                }else{
-                    endData.msg=user.lang['Not Permitted'];
-                    res.end(s.prettyPrint(endData))
+                })
+                if(req.query.deleteFiles === 'true'){
+                    deleteMonitorData(req.params.ke,req.params.id).then(() => {
+                        s.debugLog(`Deleted Monitor Data`,{
+                            ke: req.params.ke,
+                            mid: req.params.id,
+                        })
+                    })
                 }
+                endData.ok=true;
+                endData.msg='Monitor Deleted by user : '+user.uid
+                res.end(s.prettyPrint(endData))
             }
         },res,req)
     })
@@ -250,28 +384,29 @@ module.exports = function(s,config,lang,app){
             }
             var form = s.getPostData(req)
             if(form){
-                var insert = {
+                const insertQuery = {
                     ke : req.params.ke,
                     uid : user.uid,
                     code : s.gid(30),
                     ip : form.ip,
                     details : s.stringJSON(form.details)
                 }
-                var escapes = []
-                Object.keys(insert).forEach(function(column){
-                    escapes.push('?')
-                });
-                s.sqlQuery('INSERT INTO API ('+Object.keys(insert).join(',')+') VALUES ('+escapes.join(',')+')',Object.values(insert),function(err,r){
-                    insert.time = s.formattedTime(new Date,'YYYY-DD-MM HH:mm:ss');
+                s.knexQuery({
+                    action: "insert",
+                    table: "API",
+                    insert: insertQuery
+                },(err,r) => {
+                    insertQuery.time = s.formattedTime(new Date,'YYYY-DD-MM HH:mm:ss');
+                    insertQuery.details = s.parseJSON(insertQuery.details)
                     if(!err){
                         s.tx({
                             f: 'api_key_added',
                             uid: user.uid,
-                            form: insert
+                            form: insertQuery
                         },'GRP_' + req.params.ke)
                         endData.ok = true
                     }
-                    endData.api = insert
+                    endData.api = insertQuery
                     s.closeJsonResponse(res,endData)
                 })
             }else{
@@ -293,36 +428,38 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            var form = s.getPostData(req)
-            if(form){
-                if(!form.code){
-                    s.tx({
-                        f:'form_incomplete',
+            var form = s.getPostData(req) || {}
+            const code = form.code || s.getPostData(req,'code',false)
+            if(!code){
+                s.tx({
+                    f:'form_incomplete',
+                    uid: user.uid,
+                    form:'APIs'
+                },'GRP_' + req.params.ke)
+                endData.msg = lang.postDataBroken
+                s.closeJsonResponse(res,endData)
+                return
+            }
+            if(code){
+                s.knexQuery({
+                    action: "delete",
+                    table: "API",
+                    where: {
+                        ke: req.params.ke,
                         uid: user.uid,
-                        form:'APIs'
-                    },'GRP_' + req.params.ke)
-                    endData.msg = lang.postDataBroken
-                    s.closeJsonResponse(res,endData)
-                    return
-                }
-                var row = {
-                    ke : req.params.ke,
-                    uid : user.uid,
-                    code : form.code
-                }
-                var where = []
-                Object.keys(row).forEach(function(column){
-                    where.push(column+'=?')
-                })
-                s.sqlQuery('DELETE FROM API WHERE '+where.join(' AND '),Object.values(row),function(err,r){
+                        code: code,
+                    }
+                },(err,r) => {
                     if(!err){
                         s.tx({
                             f: 'api_key_deleted',
                             uid: user.uid,
-                            form: row
+                            form: {
+                                code: code
+                            }
                         },'GRP_' + req.params.ke)
                         endData.ok = true
-                        delete(s.api[row.code])
+                        delete(s.api[code])
                     }
                     s.closeJsonResponse(res,endData)
                 })
@@ -345,15 +482,16 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            var row = {
+            const whereQuery = {
                 ke : req.params.ke,
                 uid : user.uid
             }
-            var where = []
-            Object.keys(row).forEach(function(column){
-                where.push(column+'=?')
-            })
-            s.sqlQuery('SELECT * FROM API WHERE '+where.join(' AND '),Object.values(row),function(err,rows){
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "API",
+                where: whereQuery
+            },function(err,rows) {
                 if(rows && rows[0]){
                     rows.forEach(function(row){
                         row.details = JSON.parse(row.details)
@@ -378,21 +516,36 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const groupKey = req.params.ke
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            if(
+                userPermissions.monitor_create_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
-            s.sqlQuery("SELECT * FROM Presets WHERE ke=? AND type=?",[req.params.ke,'monitorStates'],function(err,presets){
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Presets",
+                where: [
+                    ['ke','=',req.params.ke],
+                    ['type','=','monitorStates'],
+                ]
+            },function(err,presets) {
                 if(presets && presets[0]){
                     endData.ok = true
                     presets.forEach(function(preset){
                         preset.details = JSON.parse(preset.details)
                     })
-                    endData.presets = presets
-                }else{
-                    endData.msg = user.lang['State Configuration Not Found']
                 }
+                endData.presets = presets || []
                 s.closeJsonResponse(res,endData)
             })
         })
@@ -410,9 +563,18 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const groupKey = req.params.ke
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            if(
+                userPermissions.monitor_create_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             var presetQueryVals = [req.params.ke,'monitorStates',req.params.stateName]
@@ -437,7 +599,11 @@ module.exports = function(s,config,lang,app){
                                 details: s.s(details),
                                 type: 'monitorStates'
                             }
-                            s.sqlQuery('INSERT INTO Presets ('+Object.keys(insertData).join(',')+') VALUES (?,?,?,?)',Object.values(insertData))
+                            s.knexQuery({
+                                action: "insert",
+                                table: "Presets",
+                                insert: insertData
+                            })
                             s.tx({
                                 f: 'add_group_state',
                                 details: details,
@@ -449,7 +615,17 @@ module.exports = function(s,config,lang,app){
                             var details = Object.assign(preset.details,{
                                 monitors : form.monitors
                             })
-                            s.sqlQuery('UPDATE Presets SET details=? WHERE ke=? AND name=?',[s.s(details),req.params.ke,req.params.stateName])
+                            s.knexQuery({
+                                action: "update",
+                                table: "Presets",
+                                update: {
+                                    details: s.s(details)
+                                },
+                                where: [
+                                    ['ke','=',req.params.ke],
+                                    ['name','=',req.params.stateName],
+                                ]
+                            })
                             s.tx({
                                 f: 'edit_group_state',
                                 details: details,
@@ -467,7 +643,14 @@ module.exports = function(s,config,lang,app){
                             endData.msg = user.lang['State Configuration Not Found']
                             s.closeJsonResponse(res,endData)
                         }else{
-                            s.sqlQuery('DELETE FROM Presets WHERE ke=? AND name=?',[req.params.ke,req.params.stateName],function(err){
+                            s.knexQuery({
+                                action: "delete",
+                                table: "Presets",
+                                where: {
+                                    ke: req.params.ke,
+                                    name: req.params.stateName,
+                                }
+                            },(err) => {
                                 if(!err){
                                     endData.msg = lang["Deleted State Configuration"]
                                     endData.ok = true

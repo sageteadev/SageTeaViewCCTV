@@ -1,83 +1,111 @@
-<% include blocks/header %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Powered by Shinobi, http://shinobi.video -->
+<% include blocks/header-title.ejs %>
+<%
+    if(config.baseURL)window.libURL = config.baseURL;
+    if(!window.libURL)window.libURL = originalURL;
+ %>
+<% include blocks/header-meta.ejs %>
+<meta http-equiv="content-type" content="text/html;charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/css/bootstrap5-theme.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/vendor/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/css/login.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/css/gradients.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.darktheme.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<% include blocks/header-favicon.ejs %>
+<script src="<%-window.libURL%>assets/vendor/js/jquery.min.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/jquery-ui.min.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/jquery.serialize.js"></script>
+<meta name="google-signin-client_id" content="<%- config.appIdGoogleSignIn %>">
+</head>
+<% cleanLang = function(string){
+    if(!string){string=''}
+    return string.replace(/'/g,"\\'")
+}%>
 <% if(screen){screen=screen.toLowerCase()} %>
-<div class="shinobi-bg display-table" style="height:100%">
-<div class="shinobi-bg-shade">
-<div class="container">
-    	<div class="row">
-			<div class="col-md-6 col-md-offset-3">
-				<div class="panel panel-login">
-                    <% if(config.showLoginCardHeader === true){
-                        var logoImageLink
-                        if(config.logoLocation76x76.indexOf('//') === -1){
-                            logoImageLink = window.libURL + config.logoLocation76x76
-                        }else{
-                            logoImageLink = config.logoLocation76x76
-                        }
-                        %>
-                        <div class="panel-heading">
-                            <div class="panel-heading-shade">
-                                <div class="row">
-                                    <div class="col-xs-12">
-                                        <a href="<%- config.logoLocation76x76Link %>" target="_blank">
-                                            <img src="<%- logoImageLink %>" style="<%- config.logoLocation76x76Style %>">
-                                        </a>
-                                    </div>
-                                </div>
-                        	</div>
+<body>
+<div id="page-contents" class="display-table full-height">
+    <div class="shinobi-bg-shade bg-gradient-<%- screen === 'super' ? 'green' : 'blue' %>">
+    	<div class="d-flex flex-row full-height">
+			<div class="col-0 col-lg-8" style="background-image:url(<%- config.loginScreenBackground %>);<%- config.loginScreenBackgroundCss ? config.loginScreenBackgroundCss : 'background-size: cover;opacity: 0.2;' %>">
+
+            </div>
+			<div class="col-12 col-lg-4 vertical-center" style="background:rgba(0,0,0,0.8)">
+                <div style="flex:1" class="p-4">
+                    <!-- Logo/Header -->
+                    <div>
+                        <% if(config.showLoginCardHeader === true){
+                            var logoImageLink
+                            if(config.logoLocation76x76.indexOf('//') === -1){
+                                logoImageLink = window.libURL + config.logoLocation76x76
+                            }else{
+                                logoImageLink = config.logoLocation76x76
+                            }
+                            %>
+                            <div class="text-center p-2">
+                                <a href="<%- config.logoLocation76x76Link %>" target="_blank">
+                                    <img src="<%- logoImageLink %>" style="<%- config.logoLocation76x76Style %>">
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                    <!-- Logo/Header END -->
+                    <!-- Card -->
+    				<div class="text-white">
+                        <div class="text-center">
+                            <h4 class="mt-3 mb-2 text-white" style="font-weight:normal"><%- lang.Welcome %></h4>
                         </div>
-                    <% } %>
-					<div class="panel-body">
-						<div class="row">
-							<div class="col-lg-12">
+    					<div class="card-body">
+    						<div class="row dark">
 								<form id="login-form" method="post" style="display: block;margin:0">
                                     <input type="hidden" name="machineID" id="machineID" value="">
                                     <% var message,timeLeft;if(message){ %>
-                                        <div class="form-group text-center monospace">
+                                        <div class="form-group text-center monospace" id ="login-message">
                                             <%= message %>
     									</div>
                                     <% } %>
 									<div class="form-group">
-										<input type="text" name="mail" id="email" tabindex="1" class="monospace form-control" placeholder="<%- lang.Email %>" value="">
+                                        <label><%- lang['Email'] %></label>
+										<input type="text" name="mail" id="email" tabindex="1" autofocus class="form-control wide-text" placeholder="<%- lang.Email %>" value="">
 									</div>
 									<div class="form-group">
-										<input type="password" name="pass" id="pass" tabindex="2" class="monospace form-control" placeholder="<%- lang.Password %>">
+                                        <label><%- lang['Password'] %></label>
+										<input type="password" name="pass" id="pass" tabindex="2" class="form-control wide-text" placeholder="<%- lang.Password %>">
 									</div>
 									<div class="form-group f_i_input f_i_ldap" style="display:none">
-										<input name="key" id="key" tabindex="2" class="monospace form-control" placeholder="Group Key">
+                                        <label><%- lang['Group Key'] %></label>
+										<input name="key" id="key" tabindex="2" class="form-control wide-text" placeholder="Group Key">
 									</div>
                                     <% if(config.showLoginSelector === true){ %>
-    									<div class="form-group">
-    									<div class="row">
-                                            <div class="col-md-12 monospace" style="width:calc(100% - 48px)">
-                                                <select class="form-control" name="function" selector="f_i">
-                                                    <% switch(screen){
-                                                        case'super': %>
-                                                    <option value="super"><%- lang.Superuser %></option>
-                                                    <% break;
-                                                        case'admin': %>
-                                                    <option value="admin"><%- lang.Admin %></option>
-                                                    <% break;
-                                                        default: %>
-                                                    <option value="dash" selected><%- lang.Dashboard %></option>
-                                                    <% if(config.productType==='Pro'){ %>
-                                                    <option value="ldap"><%- lang.LDAP %></option>
-                                                    <% } %>
-                                                    <option value="streamer"><%- lang.Streamer %></option>
-                                                    <option value="cam"><%- lang.Dashcam %> (<%- lang.Streamer %> v2)</option>
-                                                    <% break;
-                                                    } %>
-                                                </select>
-                                            </div>
-                                            <div class="text-right" title="<%- lang['Remember Me'] %>" style="display:inline-block">
-                                                <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="remember_me">
-                                                  <input type="checkbox" id="remember_me" value="1" name="remember" class="mdl-switch__input">
-                                                    <span class="monospace mdl-switch__label"></span>
-                                                </label>
-                                            </div>
-    									</div>
+    									<div class="form-group f_i_input f_i_">
+                                            <label><%- lang['Landing Page'] %></label>
+        									<div class="row">
+                                                <div class="col-md-12">
+                                                    <select class="form-control wide-text" name="function">
+                                                        <% switch(screen){
+                                                            case'super': %>
+                                                        <option value="super"><%- lang.Superuser %></option>
+                                                        <% break;
+                                                            case'admin': %>
+                                                        <option value="admin"><%- lang.Admin %></option>
+                                                        <% break;
+                                                            default: %>
+                                                        <option value="dash" selected><%- lang.Dashboard %></option>
+                                                        <option value="streamer"><%- lang.Streamer %></option>
+                                                        <option value="cam"><%- lang.Dashcam %> (<%- lang.Streamer %> v2)</option>
+                                                        <% break;
+                                                        } %>
+                                                    </select>
+                                                </div>
+        									</div>
     									</div>
                                     <% }else{ %>
-                                        <select class="form-control" name="function" style="display:none">
+                                        <select class="form-control wide-text" name="function" style="display:none">
                                             <% switch(screen){
                                                 case'super': %>
                                             <option value="super"><%- lang.Superuser %></option>
@@ -91,86 +119,90 @@
                                             } %>
                                         </select>
                                     <% } %>
-									<div class="form-group" style="margin:0">
-                                        <button type="submit" name="login-submit" id="login-submit" tabindex="4" class="btn btn-success btn-block"><%- lang.Login %></button>
+                                    <div class="form-group" <%- config.showLoginTypeSelector === true ? '' : 'style="display:none"' %>>
+                                        <label><%- lang['Authenticate'] %></label>
+                                        <select class="form-control wide-text" name="alternateLogin" selector="f_i">
+                                            <option value="" selected><%- lang.Default %></option>
+                                            <% if(config.allowGoogleSignOn){ %>
+                                                <option value="google">Google</option>
+                                            <% } %>
+                                            <option value="ldap"><%- lang.LDAP %></option>
+                                        </select>
+                                        <input style="display:none" name="alternateLoginToken" class="form-control wide-text" placeholder="Group Key">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="mb-0">
+                                            <input class="mt-1 mr-1" type="checkbox" id="remember_me" value="1" name="remember">
+                                            <span class="text-white"><%- lang['Remember Me'] %></span>
+                                        </label>
+                                    </div>
+									<div class="form-group mt-4">
+                                        <button type="submit" name="login-submit" id="login-submit" tabindex="4" class="btn btn-success btn-block wide-text" style="color:#FFF"><%- lang.Login %></button>
 									</div>
-                                    <% if(config.showPoweredByShinobi){ %>
-                                        <p style="<%- config.poweredByShinobiClass %>"><small><%- config.poweredByShinobi %></small></p>
-                                    <% }else{ %>
-                                        <!-- <%- config.poweredByShinobi %> -->
+                                    <% if(config.allowGoogleSignOn){ %>
+    									<div class="form-group text-center">
+                                            <div class="g-signin2" data-onsuccess="onGoogleSignIn" style="display: inline-block;"></div>
+    									</div>
                                     <% } %>
 								</form>
-							</div>
-						</div>
-					</div>
+    						</div>
+    					</div>
+    				</div>
+                    <!-- Card END -->
+                    <div class="my-5"></div>
+                    <div class="form-group mb-0 text-center">
+                        <% config.socialLinks.forEach((item) => { %>
+                            <a class="mr-2 social-link btn btn-primary <%- item.color || 'bg-none text-white' %>" target="_blank" href="<%- item.href %>">
+                                <div class="d-flex flex-row full-height">
+                                    <div class="vertical-center full-height" style="flex: 1">
+                                        <i class="fa fa-<%- item.icon %>"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        <% }) %>
+                    </div>
+                    <!-- Powered By Shinobi -->
+                    <div class="mt-4"></div>
+                    <div class="text-center text-white monospace mt-2">
+                        <small>
+                            <% if(config.showPoweredByShinobi){ %>
+                                <p><%- config.poweredByShinobi %></p>
+                            <% }else{ %>
+                                <!-- <%- config.poweredByShinobi %> -->
+                            <% } %>
+                        </small>
+                    </div>
+                    <!-- Powered By Shinobi END -->
 				</div>
 			</div>
 		</div>
-	</div>
+    </div>
 </div>
-</div>
-<script src="<%-window.libURL%>libs/js/material.min.js"></script>
+</body>
 <script>
+    var googleSignIn = false;
     <% var failedLogin;if(failedLogin===true){ %>
-        localStorage.removeItem('SageTeaViewCCTVLogin_'+location.host)
+        localStorage.removeItem('ShinobiLogin_'+location.host)
     <% } %>
-    $.ccio={f:$('#login-form'),ls:localStorage.getItem('SageTeaViewCCTVLogin_'+location.host),auth:localStorage.getItem('SageteaViewCCTVAuth_'+location.host)}
-    $.ccio.gid=function(x){
-        if(!x){x=10};var t = "";var p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        for( var i=0; i < x; i++ )
-            t += p.charAt(Math.floor(Math.random() * p.length));
-        return t;
-    };
-    if(!$.ccio.auth||$.ccio.auth===''){
-        $.ccio.auth=$.ccio.gid(20)
-        localStorage.setItem('SageteaViewCCTVAuth_'+location.host,$.ccio.auth)
-    }
-    $(document).ready(function(){
-        $('#machineID').val($.ccio.auth)
-    })
-    $.ccio.f.submit(function(e){
-        $('input').css('border-color','')
-        e.e=$(this),e.s=e.e.serializeObject(),e.inputs=e.e.find('input,button');
-        if(e.s.remember){
-            localStorage.setItem('SageTeaViewCCTVLogin_'+location.host,JSON.stringify({mail:e.s.mail,pass:e.s.pass,function:e.s.function}))
-        }else{localStorage.removeItem('SageTeaViewCCTVLogin_'+location.host)}
-    })
-    if($.ccio.ls){
-        $.ccio.ls=JSON.parse($.ccio.ls);
-        $.each($.ccio.ls,function(n,v){
-            n=$.ccio.f.find('[name="'+n+'"]')
-            if(n.attr('type')==='checkbox'){
-                n.prop('checked',true)
-            }else{
-                n.val(v)
-            }
-        });
-        $.ccio.f.find('[name="remember"]').prop('checked',true);
-        $.ccio.f.submit()
-    }
-    $('[name="function"]').change(function(){
-        e={};
-        e.removeClass='btn-danger btn-primary btn-success btn-warning'
-        switch($(this).val()){
-            case'streamer':
-                e.addClass='btn-warning'
-            break;
-            case'admin':
-                e.addClass='btn-primary'
-            break;
-            case'super':
-                e.addClass='btn-danger'
-            break;
-            default:
-                e.addClass='btn-success'
-            break;
-        }
-        $('#login-submit').removeClass(e.removeClass).addClass(e.addClass)
-    })
-$('[selector]').change(function(e){
-    e.v=$(this).val();e.a=$(this).attr('selector')
-    $('.'+e.a+'_input').hide()
-    $('.'+e.a+'_'+e.v).show();
-    $('.'+e.a+'_text').text($(this).find('option:selected').text())
-}).change();
 </script>
+<script src="<%-window.libURL%>assets/js/bs5.login.js"></script>
+<% if(config.allowGoogleSignOn){ %>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+        function onGoogleSignIn(googleUser) {
+            var id_token = googleUser.getAuthResponse().id_token;
+            loginForm.find('[name="mail"],[name="pass"],[name="alternateLogin"],.g-signin2').hide()
+            loginForm.find('[name="alternateLogin"]').val('google')
+            loginForm.find('[name="alternateLoginToken"]').val(id_token)
+            googleSignIn = true
+            loginForm.submit()
+        }
+        function googleSignOut() {
+          var auth2 = gapi.auth2.getAuthInstance();
+          auth2.signOut().then(function () {
+            console.log('Google Signed out.');
+          });
+        }
+    </script>
+<% } %>
+</html>

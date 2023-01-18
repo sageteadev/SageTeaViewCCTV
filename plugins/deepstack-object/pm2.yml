@@ -1,0 +1,4 @@
+apps:
+  - script   : '/home/Shinobi/plugins/deepstack-object/shinobi-deepstack-object.js'
+    name     : 'shinobi-deepstack-object'
+    kill_timeout  : 5000

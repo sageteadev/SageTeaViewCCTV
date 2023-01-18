@@ -1,0 +1,14 @@
+#tab-onvifScanner .onvif_result .preview-image {
+    width: 100%;
+    background-size: cover;
+    height: 100px;
+}
+#tab-onvifScanner .onvif_result .card {
+    cursor: pointer;
+}
+#tab-onvifScanner .onvif_result .card-body {
+    min-height: auto;
+}
+#tab-onvifScanner .onvif_result {
+    padding-top:2rem;
+}

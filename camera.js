@@ -1,93 +1,100 @@
 //
-// SageTeaViewCCTV
-// Copyright (C) 2016 Moe Alam, moeiscool Shinobi
-// Copyright (C) 2023 Rúben Carneiro,  SageTea (R)
+// Shinobi - Open Source Video Management System
+// Copyright (C) 2020 Moe Alam, moeiscool
 //
+// # Supporting Shinobi Development
 //
-// # Donate
-//
-// If you like what I am doing here and want me to continue please consider donating :)
+// If you would like to support Shinobi please consider subscribing to a Mobile License :)
+// Subscribe : https://licenses.shinobi.video/subscribe?planSubscribe=plan_G31AZ9mknNCa6z
 // PayPal : paypal@m03.ca
 //
-var io = new (require('socket.io'))()
-//library loader
-var loadLib = function(lib){
-    return require(__dirname+'/libs/'+lib+'.js')
-}
+const io = new (require('socket.io').Server)()
 //process handlers
-var s = loadLib('process')(process,__dirname)
+const s = require('./libs/process.js')(process,__dirname)
 //load extender functions
-loadLib('extenders')(s)
+require('./libs/extenders.js')(s)
 //configuration loader
-var config = loadLib('config')(s)
+var config = require('./libs/config.js')(s)
 //basic functions
-loadLib('basic')(s,config)
+require('./libs/basic.js')(s,config)
 //language loader
-var lang = loadLib('language')(s,config)
+var lang = require('./libs/language.js')(s,config)
 //working directories : videos, streams, fileBin..
-loadLib('folders')(s,config,lang)
+require('./libs/folders.js')(s,config,lang)
 //code test module
-loadLib('codeTester')(s,config,lang)
+// require('./libs/codeTester.js')(s,config,lang)
 //get version
-loadLib('version')(s,config,lang)
+require('./libs/version.js')(s,config,lang)
 //video processing engine
-loadLib('ffmpeg')(s,config,lang,function(ffmpeg){
-    //ffmpeg coProcessor
-    loadLib('ffmpegCoProcessor')(s,config,lang,ffmpeg)
+require('./libs/ffmpeg.js')(s,config,lang, async () => {
     //database connection : mysql, sqlite3..
-    loadLib('sql')(s,config)
+    require('./libs/sql.js')(s,config)
     //authenticator functions : API, dashboard login..
-    loadLib('auth')(s,config,lang)
+    require('./libs/auth.js')(s,config,lang)
     //express web server with ejs
-    var app = loadLib('webServer')(s,config,lang,io)
+    const app = require('./libs/webServer.js')(s,config,lang,io)
+    //data port
+    require('./libs/dataPort.js')(s,config,lang,app,io)
+    //page layout load
+    require('./libs/definitions.js')(s,config,lang,app,io)
     //web server routes : page handling..
-    loadLib('webServerPaths')(s,config,lang,app,io)
+    require('./libs/webServerPaths.js')(s,config,lang,app,io)
     //web server routes for streams : streams..
-    loadLib('webServerStreamPaths')(s,config,lang,app,io)
+    require('./libs/webServerStreamPaths.js')(s,config,lang,app,io)
     //web server admin routes : create sub accounts, share monitors, share videos
-    loadLib('webServerAdminPaths')(s,config,lang,app,io)
+    require('./libs/webServerAdminPaths.js')(s,config,lang,app,io)
     //web server superuser routes : create admin accounts and manage system functions
-    loadLib('webServerSuperPaths')(s,config,lang,app,io)
+    require('./libs/webServerSuperPaths.js')(s,config,lang,app,io)
     //websocket connection handlers : login and streams..
-    loadLib('socketio')(s,config,lang,io)
+    require('./libs/socketio.js')(s,config,lang,io)
     //user and group functions
-    loadLib('user')(s,config,lang)
+    require('./libs/user.js')(s,config,lang)
     //timelapse functions
-    loadLib('timelapse')(s,config,lang,app,io)
+    require('./libs/timelapse.js')(s,config,lang,app,io)
     //fileBin functions
-    loadLib('fileBin')(s,config,lang,app,io)
+    require('./libs/fileBin.js')(s,config,lang,app,io)
     //monitor/camera handlers
-    loadLib('monitor')(s,config,lang)
+    require('./libs/monitor.js')(s,config,lang)
     //event functions : motion, object matrix handler
-    loadLib('events')(s,config,lang)
-    //built-in detector functions : pam-diff..
-    loadLib('detector')(s,config)
+    require('./libs/events.js')(s,config,lang)
     //recording functions
-    loadLib('videos')(s,config,lang)
-    //branding functions and config defaults
-    loadLib('videoDropInServer')(s,config,lang,app,io)
+    require('./libs/videos.js')(s,config,lang)
     //plugins : websocket connected services..
-    loadLib('plugins')(s,config,lang,io)
+    require('./libs/plugins.js')(s,config,lang,app,io)
     //health : cpu and ram trackers..
-    loadLib('health')(s,config,lang,io)
+    require('./libs/health.js')(s,config,lang,io)
     //cluster module
-    loadLib('childNode')(s,config,lang,app,io)
+    require('./libs/childNode.js')(s,config,lang,app,io)
     //cloud uploaders : amazon s3, webdav, backblaze b2..
-    loadLib('uploaders')(s,config,lang)
+    require('./libs/uploaders.js')(s,config,lang,app,io)
     //notifiers : discord..
-    loadLib('notification')(s,config,lang)
-    //notifiers : discord..
-    loadLib('rtmpserver')(s,config,lang)
+    require('./libs/rtmpserver.js')(s,config,lang)
     //dropInEvents server (file manipulation to create event trigger)
-    loadLib('dropInEvents')(s,config,lang,app,io)
-    //form fields to drive the internals
-    loadLib('definitions')(s,config,lang,app,io)
+    require('./libs/dropInEvents.js')(s,config,lang,app,io)
+    //notifiers : discord..
+    require('./libs/notification.js')(s,config,lang)
     //branding functions and config defaults
-    loadLib('branding')(s,config,lang,app,io)
+    require('./libs/branding.js')(s,config,lang,app,io)
     //custom module loader
-    loadLib('customAutoLoad')(s,config,lang,app,io)
+    require('./libs/customAutoLoad.js')(s,config,lang,app,io)
     //scheduling engine
-    loadLib('scheduler')(s,config,lang,app,io)
+    require('./libs/shinobiHub.js')(s,config,lang,app,io)
+    //onvif, ptz engine
+    require('./libs/control.js')(s,config,lang,app,io)
+    //ffprobe, onvif engine
+    require('./libs/scanners.js')(s,config,lang,app,io)
+    //scheduling engine
+    require('./libs/scheduler.js')(s,config,lang,app,io)
+    //onvif device manager
+    require('./libs/onvifDeviceManager.js')(s,config,lang,app,io)
+    //alternate logins
+    require('./libs/auth/logins.js')(s,config,lang,app)
     //on-start actions, daemon(s) starter
-    loadLib('startup')(s,config,lang)
+    await require('./libs/startup.js')(s,config,lang)
+    //p2p, commander
+    require('./libs/commander.js')(s,config,lang,app)
+    //cron
+    require('./libs/cron.js')(s,config,lang)
+    //video browser functions
+    require('./libs/videoBrowser.js')(s,config,lang,app,io)
 })

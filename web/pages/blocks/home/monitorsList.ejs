@@ -1,0 +1,38 @@
+<main class="container page-tab" id="tab-monitorsList">
+  <div class="my-3 px-3 pt-3 <%- define.Theme.isDark ? 'bg-dark text-white' : 'bg-light' %> rounded shadow-sm">
+    <h4 class="mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-blue d-flex flex-row">
+        <div style="flex:8">
+            <%- lang['Monitors'] %>
+        </div>
+    </h4>
+    <div id="monitorsListRows" class="row"></div>
+  </div>
+  <div style="margin-bottom: 50px;"></div>
+  <h4 class="sticky-bar p-3 d-flex flex-row">
+      <div style="flex:2" class="dark">
+          <select class="form-control form-control-sm btn-default" id="multi_mon_api_key_selector">
+              <option value="<%- $user.auth_token %>" selected><%-lang['Session Key']%></option>
+              <optgroup label="<%- lang['API Keys'] %>"></optgroup>
+          </select>
+      </div>
+      <div class="pl-2">
+          <input class="form-check-input no-abs" type="checkbox" id="multimon_select_all">
+      </div>
+      <div class="pl-2">
+          <div class="dropdown">
+            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="monitorsListOptions" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa fa-bars"></i>
+            </button>
+            <ul class="dropdown-menu <%- `${define.Theme.isDark ? 'dropdown-menu-dark bg-dark text-white' : 'bg-light text-dark'}` %> shadow-lg" aria-labelledby="monitorsListOptions">
+              <li><a class="dropdown-item export-selected-monitor-settings cursor-pointer"><%- lang.Export %></a></li>
+              <li><a class="dropdown-item delete-selected-monitor-settings cursor-pointer"><%- lang.Delete %></a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item import-monitor-settings cursor-pointer"><%- lang.Import %></a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item open-monitor-settings cursor-pointer"><%- lang['Add New'] %></a></li>
+            </ul>
+          </div>
+      </div>
+  </h4>
+</main>
+<script src="<%-window.libURL%>assets/js/bs5.monitorsList.js"></script>

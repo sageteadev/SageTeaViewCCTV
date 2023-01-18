@@ -27,7 +27,7 @@ Once complete open port `8080` of your Docker host in a web browser.
 > Please remember to check out the Environment Variables table further down this README.
 
 ```
-docker run -d --name='Shinobi' -p '8080:8080/tcp' -v "/dev/shm/Shinobi/streams":'/dev/shm/streams':'rw' -v "$HOME/Shinobi/config":'/config':'rw' -v "$HOME/Shinobi/customAutoLoad":'/home/Shinobi/libs/customAutoLoad':'rw' -v "$HOME/Shinobi/database":'/var/lib/mysql':'rw' -v "$HOME/Shinobi/videos":'/home/Shinobi/videos':'rw' -v "$HOME/Shinobi/plugins":'/home/Shinobi/plugins':'rw' -v '/etc/localtime':'/etc/localtime':'ro' registry.github.com/SageTeaViewCCTV/sageteaviewcctv:latest
+docker run -d --name='Shinobi' -p '8080:8080/tcp' -v "/dev/shm/Shinobi/streams":'/dev/shm/streams':'rw' -v "$HOME/Shinobi/config":'/config':'rw' -v "$HOME/Shinobi/customAutoLoad":'/home/Shinobi/libs/customAutoLoad':'rw' -v "$HOME/Shinobi/database":'/var/lib/mysql':'rw' -v "$HOME/Shinobi/videos":'/home/Shinobi/videos':'rw' -v "$HOME/Shinobi/plugins":'/home/Shinobi/plugins':'rw' -v '/etc/localtime':'/etc/localtime':'ro' registry.gitlab.com/shinobi-systems/shinobi:dev
 ```
 
 **Installing Object Detection (TensorFlow.js)**

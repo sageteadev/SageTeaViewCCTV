@@ -1,0 +1,4 @@
+apps:
+  - script   : '/home/Shinobi/plugins/deepstack-face/shinobi-deepstack-face.js'
+    name     : 'shinobi-deepstack-face'
+    kill_timeout  : 5000

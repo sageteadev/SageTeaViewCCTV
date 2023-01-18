@@ -11,13 +11,13 @@ ENV DB_USER=majesticflame \
     SSL_COUNTRY='CA' \
     SSL_STATE='BC' \
     SSL_LOCATION='Vancouver' \
-    SSL_ORGANIZATION='SageTea (R)' \
+    SSL_ORGANIZATION='Shinobi Systems' \
     SSL_ORGANIZATION_UNIT='IT Department' \
     SSL_COMMON_NAME='nvr.ninja' \
     DB_DISABLE_INCLUDED=false
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN mkdir -p /home/SageTeaViewCCTV /config /var/lib/mysql
+RUN mkdir -p /home/Shinobi /config /var/lib/mysql
 
 RUN apt update -y
 RUN apt install wget curl net-tools -y
@@ -41,6 +41,7 @@ RUN if [ "$DB_DISABLE_INCLUDED" = "false" ] ; then sed -ie "s/^bind-address\s*=\
 
 # Install FFmpeg
 
+RUN apt update --fix-missing
 RUN apt install -y software-properties-common \
         libfreetype6-dev \
         libgnutls28-dev \
@@ -56,17 +57,16 @@ RUN apt install -y software-properties-common \
         librtmp-dev \
         libx264-dev \
         libx265-dev \
-        yasm && \
-    apt install -y \
+        yasm
+RUN apt install -y \
         build-essential \
         bzip2 \
         coreutils \
+        procps \
         gnutls-bin \
         nasm \
         tar \
         x264
-
-RUN apt install -y zip
 
 RUN apt install -y \
                 ffmpeg \
@@ -81,25 +81,30 @@ RUN apt install -y \
                 sudo \
                 xz-utils
 
-WORKDIR /home/SageTeaViewCCTV
+
+WORKDIR /home/Shinobi
 COPY . .
-COPY ./plugins  /home/SageTeaViewCCTV/plugins
-RUN chmod -R 777 /home/SageTeaViewCCTV/plugins
+#RUN rm -rf /home/Shinobi/plugins
+COPY ./plugins  /home/Shinobi/plugins
+RUN chmod -R 777 /home/Shinobi/plugins
 RUN npm i npm@latest -g && \
     npm install --unsafe-perm && \
     npm install pm2 -g
 COPY ./Docker/pm2.yml ./
 
-RUN chmod -f +x /home/SageTeaViewCCTV/Docker/init.sh
-RUN sed -i -e 's/\r//g' /home/SageTeaViewCCTV/Docker/init.sh
+# Copy default configuration files
+# COPY ./config/conf.json ./config/super.json /home/Shinobi/
+RUN chmod -f +x /home/Shinobi/Docker/init.sh
+RUN sed -i -e 's/\r//g' /home/Shinobi/Docker/init.sh
+# RUN chmod -f +x /home/Shinobi/shinobi
 
-VOLUME ["/home/SageTeaViewCCTV/videos"]
-VOLUME ["/home/SageTeaViewCCTV/libs/customAutoLoad"]
+VOLUME ["/home/Shinobi/videos"]
+VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
 VOLUME ["/var/lib/mysql"]
 
 EXPOSE 8080 443 21 25
 
-ENTRYPOINT ["sh","/home/SageTeaViewCCTV/Docker/init.sh"]
+ENTRYPOINT ["sh","/home/Shinobi/Docker/init.sh"]
 
-CMD [ "pm2-docker", "pm2.yml" ]
+CMD [ "pm2-docker", "/home/Shinobi/Docker/pm2.yml" ]

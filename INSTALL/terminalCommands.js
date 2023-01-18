@@ -11,7 +11,7 @@ var createTerminalCommands = function(callback){
         if(callback)callback()
     }
     if(!s.isWin){
-        var etcPath = '/etc/sagetea/'
+        var etcPath = '/etc/shinobisystems/'
         console.log('Creating "' + etcPath + '"...')
         var createPathFile = function(){
             var pathTxt = etcPath + 'cctv.txt'
@@ -20,9 +20,9 @@ var createTerminalCommands = function(callback){
                 if(err)console.log(err)
                 fs.chmod(pathTxt,0o777,function(err){
                     if(err)console.log(err)
-                    console.log('Linking "' + s.mainDirectory + '/INSTALL/sageteaviewcctv" to "/usr/bin/sageteaviewcctv"...')
-                    fs.symlink(s.mainDirectory + '/INSTALL/sageteaviewcctv', '/usr/bin/sageteaviewcctv', next)
-                    console.log('You can now use `sageteaviewcctv` in terminal.')
+                    console.log('Linking "' + s.mainDirectory + '/INSTALL/shinobi" to "/usr/bin/shinobi"...')
+                    fs.symlink(s.mainDirectory + '/INSTALL/shinobi', '/usr/bin/shinobi', next)
+                    console.log('You can now use `shinobi` in terminal.')
                 })
             })
         }

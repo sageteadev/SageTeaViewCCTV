@@ -1,23 +1,94 @@
+<% window.additionalJsScripts = []; %>
+<%
+    if(config.baseURL)window.libURL = config.baseURL;
+    if(!window.libURL)window.libURL = originalURL;
+ %>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<!-- Powered by Shinobi, http://shinobi.video -->
-<% include header-title.ejs %>
-<% if(!window.libURL)window.libURL = originalURL + global.s.checkCorrectPathEnding(config.webPaths.home) %>
-<% include header-meta.ejs %>
-<meta http-equiv="content-type" content="text/html;charset=UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<link rel="stylesheet" href="<%-window.libURL%>libs/css/bootstrap.min.css">
-<link rel="stylesheet" href="<%-window.libURL%>libs/css/login.css">
-<link rel="stylesheet" href="<%-window.libURL%>libs/css/material.min.css">
-<link rel="stylesheet" href="<%-window.libURL%>libs/css/material.style.css">
-<link rel="stylesheet" href="<%-window.libURL%>libs/css/roboto.css" type="text/css" />
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-<% include header-favicon.ejs %>
-<script src="<%-window.libURL%>libs/js/jquery.min.js"></script>
-<script src="<%-window.libURL%>libs/js/jquery-ui.min.js"></script>
-<script src="<%-window.libURL%>libs/js/jquery.serialize.js"></script>
+    <title><%-pageTitle%></title>
+    <meta charset="utf-8">
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+    <meta name="description" content="Shinobi">
+    <meta name="author" content="Moe Alam, moeiscool on Gitlab and GitHub">
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="apple-mobile-web-app-title" content="Shinobi">
+    <% include header-favicon.ejs %>
+    <meta name="application-name" content="Shinobi"/>
+    <meta name="msapplication-TileColor" content="#333333" />
+    <meta name="msapplication-TileImage" content="libs/img/icon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="libs/img/icon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="libs/img/icon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="libs/img/icon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="libs/img/icon/mstile-310x310.png" />
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/pnotify.custom.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap-table/bootstrap-table.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bootstrap5-theme.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/daterangepicker.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/gridstack.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/jquery-ui.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/clock.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.liveGrid.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.regionEditor.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.onvifScanner.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.timelapseViewer.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.ptzControls.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.sideMenu.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.forms.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.helpinghand.css">
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+
+    <link href="<%-window.libURL%>assets/css/dashboard.css" rel="stylesheet">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.darktheme.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/gradients.css">
+    <link href="<%-window.libURL%>assets/css/modal.dark.css" rel="stylesheet">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.videoPlayer.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.livePlayer.css">
+    <%
+        const details = $user.details
+    %>
+    <script>
+        window.getAdminApiPrefix = function(piece){
+            return "<%=originalURL%><%= config.webPaths.adminApiPrefix %><%- $user.auth_token %>/"
+        }
+    </script>
+    <% customAutoLoad.LibsCss.forEach(function(lib){ %>
+        <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">
+    <% }) %>
+    <% customAutoLoad.AssetsCss.forEach(function(lib){ %>
+        <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/<%-lib%>">
+    <% }) %>
+    <style id="theme">
+        <% details.theme = details.theme || config.defaultTheme %>
+        <% try{ %>
+            <%- include(__dirname + `/web/libs/themes/${details.theme}/style.css`); %>
+        <% }catch(err){ %>
+            <%- include(__dirname + `/web/libs/themes/Ice-v3/style.css`); %>
+        <% } %>
+    </style>
+    <style id="custom_css">
+        <%= details.css %>
+    </style>
+    <script src="<%-window.libURL%>assets/vendor/js/jquery.min.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/moment-with-locales.js"></script>
+    <script>applicationName = `<%- lang.Shinobi %>`</script>
+    <script>serverTimezone = `<%- config.timezone %>`</script>
+    <script>$user = <%- JSON.stringify($user) %></script>
 </head>
-<% cleanLang = function(string){
-    if(!string){string=''}
-    return string.replace(/'/g,"\\'")
-}%>

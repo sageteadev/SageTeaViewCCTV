@@ -1,9 +1,11 @@
-var fs = require('fs');
-var http = require('http');
-var https = require('https');
-var express = require('express');
-var app = express()
+const fs = require('fs');
+const url = require('url');
+const http = require('http');
+const https = require('https');
+const express = require('express');
+const app = express()
 module.exports = function(s,config,lang,io){
+    app.disable('x-powered-by');
     //get page URL
     if(!config.baseURL){
         config.baseURL = ""
@@ -54,10 +56,42 @@ module.exports = function(s,config,lang,io){
         if(config.renderPaths.cycle === undefined){config.renderPaths.cycle='pages/cycle'}
     // Use uws/cws
     if(config.useUWebsocketJs === undefined){config.useUWebsocketJs=true}
+    if(config.webBlocksPreloaded === undefined){
+        config.webBlocksPreloaded = [
+            'home/initial',
+            'home/videoPlayer',
+            'home/monitorsList',
+            'home/subAccountManager',
+            'home/accountSettings',
+            'home/apiKeys',
+            'home/monitorSettings',
+            'home/schedules',
+            'home/monitorStates',
+            'home/liveGrid',
+            'home/regionEditor',
+            'home/timelapseViewer',
+            'home/eventFilters',
+            'home/cameraProbe',
+            'home/powerVideo',
+            'home/onvifScanner',
+            'home/onvifDeviceManager',
+            'home/configFinder',
+            'home/logViewer',
+            'home/calendar',
+            'home/eventListWithPics',
+            'home/fileBin',
+            'home/videosTable',
+            'home/studio',
+            'confirm',
+            'home/help',
+        ]
+    }
     //SSL options
     var wellKnownDirectory = s.mainDirectory + '/web/.well-known'
     if(fs.existsSync(wellKnownDirectory))app.use('/.well-known',express.static(wellKnownDirectory))
+    config.sslEnabled = false
     if(config.ssl&&config.ssl.key&&config.ssl.cert){
+        config.sslEnabled = true
         config.ssl.key=fs.readFileSync(s.checkRelativePath(config.ssl.key),'utf8')
         config.ssl.cert=fs.readFileSync(s.checkRelativePath(config.ssl.cert),'utf8')
         if(config.ssl.port === undefined){
@@ -93,11 +127,28 @@ module.exports = function(s,config,lang,io){
             path:s.checkCorrectPathEnding(config.webPaths.super)+'socket.io',
             transports: ['websocket']
         })
+        app.use(function(req, res, next) {
+          if(!req.secure) {
+              return res.redirect(['https://', req.hostname,":",config.ssl.port, req.url].join(''));
+          }
+          next();
+        })
     }
     //start HTTP
+    const onHttpRequestUpgradeExtensions = s.onHttpRequestUpgradeExtensions;
     var server = http.createServer(app);
     server.listen(config.port,config.bindip,function(){
         console.log(lang.Shinobi+' : Web Server Listening on '+config.port);
+    });
+    server.on('upgrade', function upgrade(request, socket, head) {
+        const pathname = url.parse(request.url).pathname;
+        if(typeof onHttpRequestUpgradeExtensions[pathname] === 'function'){
+            onHttpRequestUpgradeExtensions[pathname](request, socket, head)
+        } else if (pathname.indexOf('/socket.io') > -1) {
+            return;
+        } else {
+            socket.destroy();
+        }
     });
     if(config.webPaths.home !== '/'){
         io.attach(server,{

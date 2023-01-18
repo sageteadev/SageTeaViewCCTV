@@ -1,0 +1,22 @@
+<main class="page-tab pt-3" id="tab-helpWindow">
+    <div class="row <%- define.Theme.isDark ? `dark` : '' %>">
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+            include fieldBuilders.ejs
+        %>
+        <% Object.keys(define['Help Window'].blocks).forEach(function(blockKey){
+              var theBlock = define['Help Window'].blocks[blockKey]
+              drawBlock(theBlock)
+          }) %>
+    </div>
+    <style>
+        .blockquoteInHelp:before,.blockquoteInHelp:after{
+            display:none;
+        }
+    </style>
+    <script>userHasSubscribed = <%- !!config.userHasSubscribed %>;</script>
+    <script src="<%-window.libURL%>assets/js/bs5.help.js"></script>
+</main>

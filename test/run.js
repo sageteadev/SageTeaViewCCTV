@@ -177,7 +177,7 @@ module.exports = function(s,config,lang,io){
             "super/accounts/saveSettings" : function(next){
                 console.log(requestSuperURL)
                 var userData = {
-                   "mail": "admin@sagetea.video1",
+                   "mail": "admin@shinobi.video1",
                    "pass": "password",
                    "pass_again": "password"
                 }

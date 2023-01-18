@@ -1,8 +1,8 @@
 #!/bin/bash
 if [ -e "INSTALL/installed.txt" ]; then
-    echo "Starting SageTeaViewCCTV"
+    echo "Starting Shinobi"
     pm2 start camera.js
-    pm2 start cron.js
+    #pm2 start cron.js
     pm2 logs
 fi
 if [ ! -e "INSTALL/installed.txt" ]; then

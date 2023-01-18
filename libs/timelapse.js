@@ -1,7 +1,27 @@
-var fs = require('fs')
-var moment = require('moment')
-var express = require('express')
+const fs = require('fs')
+const moment = require('moment')
+const express = require('express')
+const exec = require('child_process').exec;
+const spawn = require('child_process').spawn;
+const events = require('events');
 module.exports = function(s,config,lang,app,io){
+    const {
+        sendTimelapseFrameToMasterNode,
+    } = require('./childNode/childUtils.js')(s,config,lang)
+    const {
+        splitForFFPMEG,
+    } = require('./ffmpeg/utils.js')(s,config,lang)
+    const {
+        getFileDirectory,
+    } = require('./basic/utils.js')(process.cwd(),config)
+    const {
+        processKill,
+    } = require('./monitor/utils.js')(s,config,lang)
+    const {
+        stitchMp4Files,
+    } = require('./video/utils.js')(s,config,lang)
+    const timelapseFramesCache = {}
+    const timelapseFramesCacheTimeouts = {}
     s.getTimelapseFrameDirectory = function(e){
         if(e.mid&&!e.id){e.id=e.mid}
         s.checkDetails(e)
@@ -11,17 +31,17 @@ module.exports = function(s,config,lang,app,io){
             return s.dir.videos+e.ke+'/'+e.id+'_timelapse/';
         }
     }
-    s.createTimelapseFrameAndInsert = function(e,location,filename){
+    s.createTimelapseFrameAndInsert = function(e,location,filename,eventTime,frameDetails){
         //e = monitor object
         //location = file location
         var filePath = location + filename
         var fileStats = fs.statSync(filePath)
-        var details = {}
+        var details = Object.assign({},frameDetails || {})
         if(e.details && e.details.dir && e.details.dir !== ''){
             details.dir = e.details.dir
         }
-        var timeNow = new Date()
-        var queryInfo = {
+        const timeNow = eventTime || new Date()
+        const queryInfo = {
             ke: e.ke,
             mid: e.id,
             details: s.s(details),
@@ -30,53 +50,28 @@ module.exports = function(s,config,lang,app,io){
             time: timeNow
         }
         if(config.childNodes.enabled === true && config.childNodes.mode === 'child' && config.childNodes.host){
-            var currentDate = s.formattedTime(queryInfo.time,'YYYY-MM-DD')
-            s.cx({
-                f: 'open_timelapse_file_transfer',
+            var currentDate = s.formattedTime(timeNow,'YYYY-MM-DD')
+            const childNodeData = {
                 ke: e.ke,
                 mid: e.id,
-                d: s.group[e.ke].rawMonitorConfigurations[e.id],
+                time: currentDate,
                 filename: filename,
                 currentDate: currentDate,
                 queryInfo: queryInfo
-            })
-            var formattedTime = s.timeObject(timeNow).format()
-            fs.createReadStream(filePath,{ highWaterMark: 500 })
-            .on('data',function(data){
-                s.cx({
-                    f: 'created_timelapse_file_chunk',
-                    ke: e.ke,
-                    mid: e.id,
-                    time: formattedTime,
-                    filesize: e.filesize,
-                    chunk: data,
-                    d: s.group[e.ke].rawMonitorConfigurations[e.id],
-                    filename: filename,
-                    currentDate: currentDate,
-                    queryInfo: queryInfo
-                })
-            })
-            .on('close',function(){
-                s.cx({
-                    f: 'created_timelapse_file',
-                    ke: e.ke,
-                    mid: e.id,
-                    time: formattedTime,
-                    filesize: e.filesize,
-                    d: s.group[e.ke].rawMonitorConfigurations[e.id],
-                    filename: filename,
-                    currentDate: currentDate,
-                    queryInfo: queryInfo
-                })
-            })
+            }
+            sendTimelapseFrameToMasterNode(filePath,childNodeData)
         }else{
             s.insertTimelapseFrameDatabaseRow(e,queryInfo,filePath)
         }
     }
     s.insertTimelapseFrameDatabaseRow = function(e,queryInfo,filePath){
-        s.sqlQuery('INSERT INTO `Timelapse Frames` ('+Object.keys(queryInfo).join(',')+') VALUES (?,?,?,?,?,?)',Object.values(queryInfo))
-        s.setDiskUsedForGroup(e,queryInfo.size / 1000000,'timelapeFrames')
-        s.purgeDiskForGroup(e)
+        s.knexQuery({
+            action: "insert",
+            table: "Timelapse Frames",
+            insert: queryInfo
+        })
+        s.setDiskUsedForGroup(e.ke,queryInfo.size / 1048576,'timelapeFrames')
+        s.purgeDiskForGroup(e.ke)
         s.onInsertTimelapseFrameExtensions.forEach(function(extender){
             extender(e,queryInfo,filePath)
         })
@@ -103,16 +98,323 @@ module.exports = function(s,config,lang,app,io){
     s.deleteTimelapseFrameFromCloud = function(e){
         // e = video object
         s.checkDetails(e)
-        var frameSelector = [e.id,e.ke,new Date(e.time)]
-        s.sqlQuery('SELECT * FROM `Cloud Timelapse Frames` WHERE `mid`=? AND `ke`=? AND `time`=?',frameSelector,function(err,r){
-            if(r&&r[0]){
+        var frameSelector = {
+            ke: e.ke,
+            mid: e.id,
+            time: new Date(e.time),
+        }
+        s.knexQuery({
+            action: "select",
+            columns: "*",
+            table: "Cloud Timelapse Frames",
+            where: frameSelector,
+            limit: 1
+        },function(err,r){
+            if(r && r[0]){
                 r = r[0]
-                s.sqlQuery('DELETE FROM `Cloud Timelapse Frames` WHERE `mid`=? AND `ke`=? AND `time`=?',frameSelector,function(){
+                s.knexQuery({
+                    action: "delete",
+                    table: "Cloud Timelapse Frames",
+                    where: frameSelector,
+                    limit: 1
+                },function(){
                     s.onDeleteTimelapseFrameFromCloudExtensionsRunner(e,r)
                 })
             }else{
 //                    console.log('Delete Failed',e)
 //                    console.error(err)
+            }
+        })
+    }
+    const deleteTimelapseFrame = function(e){
+        // e = video object
+        s.checkDetails(e)
+        var frameSelector = {
+            ke: e.ke,
+            mid: e.mid,
+            filename: e.filename,
+        }
+        s.knexQuery({
+            action: "select",
+            columns: "*",
+            table: "Timelapse Frames",
+            where: frameSelector,
+            limit: 1
+        },function(err,r){
+            if(r && r[0]){
+                r = r[0]
+                s.knexQuery({
+                    action: "delete",
+                    table: "Timelapse Frames",
+                    where: frameSelector,
+                    limit: 1
+                },async function(){
+                    s.setDiskUsedForGroup(e.ke,-(r.size / 1048576),'timelapeFrames')
+                    s.file('delete',e.fileLocation)
+                    const fileDirectory = getFileDirectory(folderPath);
+                    const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;
+                    if(folderIsEmpty){
+                        await fs.rmdir(folderPath, { recursive: true })
+                    }
+                })
+            }else{
+//                    console.log('Delete Failed',e)
+//                    console.error(err)
+            }
+        })
+    }
+    function splitArrayIntoMultiple(bigarray,size){
+        size = size || 80;
+        var arrayOfArrays = [];
+        for (var i=0; i<bigarray.length; i+=size) {
+             arrayOfArrays.push(bigarray.slice(i,i+size));
+        }
+        return arrayOfArrays
+    }
+    async function createTemporaryInputFile(frames,concatListFile){
+        const concatFiles = []
+        const fileList = []
+        frames.forEach(function(frame,frameNumber){
+            var selectedDate = frame.filename.split('T')[0]
+            var fileLocationMid = `${frame.ke}/${frame.mid}_timelapse/${selectedDate}/`
+            frame.details = s.parseJSON(frame.details)
+            var fileLocation
+            if(frame.details.dir){
+                fileLocation = `${s.checkCorrectPathEnding(frame.details.dir)}`
+            }else{
+                fileLocation = `${s.dir.videos}`
+            }
+            fileLocation = `${fileLocation}${fileLocationMid}${frame.filename}`
+            try{
+                fs.statSync(fileLocation)
+                concatFiles.push(`file '${fileLocation}'`)
+                fileList.push(`${fileLocation}`)
+            }catch(err){
+                s.debugLog(`Failed to read frame for Timelapse build`)
+            }
+        })
+        await fs.promises.writeFile(concatListFile,concatFiles.join('\n'))
+        return fileList
+    }
+    async function createTemporaryInputFileForStitched(videosPathsList,concatListFile){
+        const concatFiles = []
+        const fileList = []
+        videosPathsList.forEach(function(videoPath){
+            try{
+                fs.statSync(videoPath)
+                concatFiles.push(`file '${videoPath}'`)
+                fileList.push(`${videoPath}`)
+            }catch(err){
+                s.debugLog(`Failed to read segment for Timelapse build`)
+            }
+        })
+        s.debugLog(concatFiles)
+        await fs.promises.writeFile(concatListFile,concatFiles.join('\n'))
+        return fileList
+    }
+    function buildVideoSegmentFromFrames(options){
+        return new Promise((resolve,reject) => {
+            const frames = options.frames
+            const ke = frames[0].ke
+            const mid = frames[0].mid
+            const concatListFile = options.listFile
+            createTemporaryInputFile(frames,concatListFile).then((framesAccepted) => {
+                var completionTimeout
+                const framesPerSecond = options.fps
+                const finalMp4OutputLocation = options.output
+                const onPercentChange = options.onPercentChange
+                const numberOfFrames = framesAccepted.length
+                const commandString = `-y -threads 1 -re -f concat -safe 0 -r ${framesPerSecond} -i "${concatListFile}" -q:v 1 -c:v libx264 -preset ultrafast -r ${framesPerSecond} "${finalMp4OutputLocation}"`
+                s.debugLog("ffmpeg",commandString)
+                const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
+                videoBuildProcess.stdout.on('data',function(data){
+                    s.debugLog('stdout',finalMp4OutputLocation,data.toString())
+                })
+                videoBuildProcess.stderr.on('data',function(data){
+                    const text = data.toString()
+                    if(text.startsWith('frame=')){
+                        const currentFrame = parseInt(text.split(/(\s+)/)[2])
+                        const percent = (currentFrame / numberOfFrames * 100).toFixed(1)
+                        onPercentChange(percent,currentFrame)
+                    }
+                    clearTimeout(completionTimeout)
+                    completionTimeout = setTimeout(function(){
+                        s.debugLog('videoBuildProcess completionTimeout',finalMp4OutputLocation)
+                        processKill(videoBuildProcess)
+                    },20000)
+                })
+                videoBuildProcess.on('exit',async function(data){
+                    clearTimeout(completionTimeout)
+                    resolve()
+                    await fs.promises.unlink(concatListFile)
+                })
+            })
+        })
+    }
+    async function chunkFramesAndBuildMultipleVideosThenSticth(options){
+        // a single video with too many frames makes the video unplayable, this is the fix.
+        const frames = options.frames
+        const ke = frames[0].ke
+        const mid = frames[0].mid
+        const finalFileName = options.finalFileName
+        const concatListFile = options.listFile
+        const framesPerSecond = options.fps
+        const finalMp4OutputLocation = options.output
+        const onPercentChange = options.onPercentChange
+        const frameChunks = splitArrayIntoMultiple(frames,80)
+        const numberOfSets = frameChunks.length
+        const filePathsList = []
+        for (let i = 0; i < numberOfSets; i++) {
+            var frameSet = frameChunks[i]
+            var numberOfFrames = frameSet.length
+            var segmentFileOutput = `${s.dir.streams}${ke}/${mid}/${s.gid(10)}.mp4`
+            filePathsList.push(segmentFileOutput)
+            await buildVideoSegmentFromFrames({
+                frames: frameSet,
+                listFile: `${concatListFile}${i}`,
+                fps: framesPerSecond,
+                output: segmentFileOutput,
+                onPercentChange: (percent,currentFrame) => {
+                    const overallPercent = ((percent / numberOfSets) + (i * (100 / numberOfSets))).toFixed(1);
+                    s.tx({
+                        f: 'timelapse_build_percent',
+                        ke: ke,
+                        mid: mid,
+                        name: finalFileName,
+                        percent: overallPercent,
+                    },'GRP_'+ke);
+                    if(percent == 100){
+                        s.debugLog('videoBuildProcess 100%',finalMp4OutputLocation)
+                    }
+                    s.debugLog(`Piece ${i}`,`${currentFrame} / ${numberOfFrames}`,`${percent}%`)
+                },
+            })
+        }
+        s.debugLog('videoBuildProcess Stitching...',finalMp4OutputLocation)
+        await createTemporaryInputFileForStitched(filePathsList,concatListFile)
+        await stitchMp4Files({
+            listFile: concatListFile,
+            output: finalMp4OutputLocation,
+        })
+        await fs.promises.rm(concatListFile)
+        for (let i = 0; i < filePathsList.length; i++) {
+            var segmentFileOutput = filePathsList[i]
+            await fs.promises.rm(segmentFileOutput)
+        }
+        s.debugLog('videoBuildProcess Stitching Complete!',finalMp4OutputLocation)
+    }
+    async function createVideoFromTimelapse(timelapseFrames,framesPerSecond){
+        s.debugLog("Building Timelapse Frames Video",timelapseFrames.length)
+        framesPerSecond = !isNaN(framesPerSecond) ? framesPerSecond : parseInt(framesPerSecond) || 2
+        const frames = timelapseFrames.reverse()
+        const numberOfFrames = timelapseFrames.length
+        const ke = frames[0].ke
+        const mid = frames[0].mid
+        const activeMonitor = s.group[ke].activeMonitors[mid]
+        const finalFileName = `${s.md5(JSON.stringify(frames))}-${framesPerSecond}fps.mp4`
+        const finalMp4OutputLocation = `${s.dir.fileBin}${ke}/${mid}/${finalFileName}`
+        const finalFileAlreadyExist = fs.existsSync(finalMp4OutputLocation)
+        const concatListFile = `${s.dir.streams}${ke}/${mid}/mergeJpegs_${finalFileName}.txt`
+        const response = {
+            ok: false,
+            ke: ke,
+            mid: mid,
+            name: finalFileName,
+        }
+        s.debugLog("activeMonitor.buildingTimelapseVideo",!!activeMonitor.buildingTimelapseVideo)
+        if(activeMonitor.buildingTimelapseVideo){
+            s.debugLog("Timelapse Frames Video Building Already",finalMp4OutputLocation)
+            return activeMonitor.buildingTimelapseVideo
+        }
+        s.debugLog("finalFileAlreadyExist",finalFileAlreadyExist)
+        if(finalFileAlreadyExist){
+            s.debugLog("Timelapse Frames Video finalFileAlreadyExist",finalMp4OutputLocation)
+            response.fileExists = true
+            response.msg = lang['Already exists']
+            return response
+        }
+        if(frames.length < framesPerSecond){
+            response.msg = lang.notEnoughFramesText1
+            return response
+        }
+        activeMonitor.buildingTimelapseVideo = response
+        chunkFramesAndBuildMultipleVideosThenSticth({
+            frames: frames,
+            listFile: concatListFile,
+            fps: framesPerSecond,
+            output: finalMp4OutputLocation,
+            finalFileName: finalFileName
+        }).then(async () => {
+            // videoBuildProcess exit
+            s.debugLog('videoBuildProcess exit',finalMp4OutputLocation)
+            const timeNow = new Date()
+            const fileStats = await fs.promises.stat(finalMp4OutputLocation)
+            const details = {
+                start: frames[0].time,
+                end: frames[frames.length - 1].time,
+            }
+            s.knexQuery({
+                action: "insert",
+                table: "Files",
+                insert: {
+                    ke: ke,
+                    mid: mid,
+                    details: s.s(details),
+                    name: finalFileName,
+                    size: fileStats.size,
+                    time: timeNow,
+                }
+            })
+            s.setDiskUsedForGroup(ke,fileStats.size / 1048576,'fileBin')
+            s.purgeDiskForGroup(ke)
+            s.tx({
+                f: 'fileBin_item_added',
+                ke: ke,
+                mid: mid,
+                details: details,
+                name: finalFileName,
+                size: fileStats.size,
+                time: timeNow,
+                timelapseVideo: true,
+            },'GRP_'+ke);
+            delete(activeMonitor.buildingTimelapseVideo)
+            s.debugLog("Timelapse Frames Video Done!",finalMp4OutputLocation)
+        })
+        response.ok = true
+        response.msg = `${lang.Building}... ${lang['Please Wait...']}`
+        return response
+    }
+    function initiateTimelapseVideoBuild({
+        groupKey,
+        monitorId,
+        framesPerSecond,
+        framesPosted,
+    }){
+        return new Promise((resolve,reject) => {
+            let response = {ok: false}
+            if(!monitorId){
+                response.msg = lang['No Monitor Found, Ignoring Request']
+                resolve(response)
+            }else{
+                const frames = []
+                var n = 0
+                framesPosted.forEach((frame) => {
+                    var firstParam = [['ke','=',groupKey],['mid','=',monitorId],['filename','=',frame.filename]]
+                    if(n !== 0)firstParam[0] = (['or']).concat(firstParam[0])
+                    frames.push(...firstParam)
+                    ++n
+                })
+                s.knexQuery({
+                    action: "select",
+                    columns: "*",
+                    table: "Timelapse Frames",
+                    where: frames
+                },async (err,r) => {
+                    if(r.length > 0){
+                        response = await createVideoFromTimelapse(r.reverse(),framesPerSecond)
+                    }
+                    resolve(response)
+                })
             }
         })
     }
@@ -125,119 +427,97 @@ module.exports = function(s,config,lang,app,io){
         config.webPaths.apiPrefix+':auth/timelapse/:ke',
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id',
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id/:date',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke/:id',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke/:id/:date',
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const monitorId = req.params.id
+            const groupKey = req.params.ke
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
             if(
-                user.permissions.watch_videos==="0" ||
-                hasRestrictions && (!user.details.video_view || user.details.video_view.indexOf(req.params.id)===-1)
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_video_view`] ||
+                    monitorRestrictions.length === 0
+                )
             ){
-                res.end(s.prettyPrint([]))
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], frames: []});
                 return
             }
-            req.sql='SELECT * FROM `Timelapse Frames` WHERE ke=?';req.ar=[req.params.ke];
-            if(req.query.archived=='1'){
-                req.sql+=' AND details LIKE \'%"archived":"1"\''
+            var origURL = req.originalUrl.split('/')
+            var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
+            var dataSet = 'Timelapse Frames'
+            switch(videoParam){
+                case'cloudTimelapse':
+                    dataSet = 'Cloud Timelapse Frames'
+                break;
             }
-            if(!req.params.id){
-                if(user.details.sub&&user.details.monitors&&user.details.allmonitors!=='1'){
-                    try{user.details.monitors=JSON.parse(user.details.monitors);}catch(er){}
-                    req.or=[];
-                    user.details.monitors.forEach(function(v,n){
-                        req.or.push('mid=?');req.ar.push(v)
-                    })
-                    req.sql+=' AND ('+req.or.join(' OR ')+')'
-                }
-            }else{
-                if(!user.details.sub||user.details.allmonitors!=='0'||user.details.monitors.indexOf(req.params.id)>-1){
-                    req.sql+=' and mid=?'
-                    req.ar.push(req.params.id)
-                }else{
-                    res.end('[]');
-                    return;
-                }
+            s.getDatabaseRows({
+                monitorRestrictions: monitorRestrictions,
+                table: dataSet,
+                groupKey: req.params.ke,
+                date: req.query.date,
+                startDate: req.query.start,
+                endDate: req.query.end,
+                startOperator: req.query.startOperator,
+                endOperator: req.query.endOperator,
+                noLimit: req.query.noLimit,
+                limit: req.query.limit,
+                archived: req.query.archived,
+                rowType: 'frames',
+                endIsStartTo: true
+            },(response) => {
+                s.closeJsonResponse(res,response.frames)
+            })
+        },res,req);
+    });
+    /**
+    * API : Build MP4 File
+     */
+    app.post([
+        config.webPaths.apiPrefix+':auth/timelapseBuildVideo/:ke',
+        config.webPaths.apiPrefix+':auth/timelapseBuildVideo/:ke/:id',
+    ], function (req,res){
+        res.setHeader('Content-Type', 'application/json');
+        s.auth(req.params,function(user){
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const actionParameter = !!req.params.action
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return
             }
-            var isMp4Call = false
-            if(req.query.mp4){
-                isMp4Call = true
-            }
-            if(req.params.date){
-                if(req.params.date.indexOf('-') === -1 && !isNaN(req.params.date)){
-                    req.params.date = parseInt(req.params.date)
-                }
-                var selectedDate = req.params.date
-                if(typeof req.params.date === 'string' && req.params.date.indexOf('.') > -1){
-                    isMp4Call = true
-                    selectedDate = req.params.date.split('.')[0]
-                }
-                selectedDate = new Date(selectedDate)
-                var utcSelectedDate = new Date(selectedDate.getTime() + selectedDate.getTimezoneOffset() * 60000)
-                req.query.start = moment(utcSelectedDate).format('YYYY-MM-DD HH:mm:ss')
-                var dayAfter = utcSelectedDate
-                dayAfter.setDate(dayAfter.getDate() + 1)
-                req.query.end = moment(dayAfter).format('YYYY-MM-DD HH:mm:ss')
-            }
-            if(req.query.start||req.query.end){
-                if(!req.query.startOperator||req.query.startOperator==''){
-                    req.query.startOperator='>='
-                }
-                if(!req.query.endOperator||req.query.endOperator==''){
-                    req.query.endOperator='<='
-                }
-                if(req.query.start && req.query.start !== '' && req.query.end && req.query.end !== ''){
-                    req.query.start = s.stringToSqlTime(req.query.start)
-                    req.query.end = s.stringToSqlTime(req.query.end)
-                    req.sql+=' AND `time` '+req.query.startOperator+' ? AND `time` '+req.query.endOperator+' ?';
-                    req.ar.push(req.query.start)
-                    req.ar.push(req.query.end)
-                }else if(req.query.start && req.query.start !== ''){
-                    req.query.start = s.stringToSqlTime(req.query.start)
-                    req.sql+=' AND `time` '+req.query.startOperator+' ?';
-                    req.ar.push(req.query.start)
-                }
-            }
-            // if(!req.query.limit||req.query.limit==''){req.query.limit=288}
-            req.sql+=' ORDER BY `time` DESC'
-            s.sqlQuery(req.sql,req.ar,function(err,r){
-                if(isMp4Call){
-                    if(r && r[0]){
-                        s.createVideoFromTimelapse(r,req.query.fps,function(response){
-                            if(response.fileExists){
-                                if(req.query.download){
-                                    res.setHeader('Content-Type', 'video/mp4')
-                                    s.streamMp4FileOverHttp(response.fileLocation,req,res)
-                                }else{
-                                    res.setHeader('Content-Type', 'application/json')
-                                    res.end(s.prettyPrint({
-                                        ok : response.ok,
-                                        fileExists : response.fileExists,
-                                        msg : response.msg,
-                                    }))
-                                }
-                            }else{
-                                res.setHeader('Content-Type', 'application/json')
-                                res.end(s.prettyPrint({
-                                    ok : response.ok,
-                                    fileExists : response.fileExists,
-                                    msg : response.msg,
-                                }))
-                            }
-                        })
-                    }else{
-                        res.setHeader('Content-Type', 'application/json');
-                        res.end(s.prettyPrint([]))
-                    }
-                }else{
-                    if(r && r[0]){
-                        r.forEach(function(file){
-                            file.details = s.parseJSON(file.details)
-                        })
-                        res.end(s.prettyPrint(r))
-                    }else{
-                        res.end(s.prettyPrint([]))
-                    }
-                }
+            const framesPerSecond = s.getPostData(req, 'fps')
+            const framesPosted = s.getPostData(req, 'frames', true) || []
+            initiateTimelapseVideoBuild({
+                groupKey,
+                monitorId,
+                framesPosted,
+                framesPerSecond,
+            }).then((buildResponse) => {
+                s.closeJsonResponse(res,buildResponse)
             })
         },res,req);
     });
@@ -246,70 +526,94 @@ module.exports = function(s,config,lang,app,io){
      */
     app.get([
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id/:date/:filename',
+        config.webPaths.apiPrefix+':auth/timelapse/:ke/:id/:date/:filename/:action',
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const actionParameter = !!req.params.action
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
             if(
-                user.permissions.watch_videos==="0" ||
-                hasRestrictions && (!user.details.video_view || user.details.video_view.indexOf(req.params.id)===-1)
+                actionParameter && (
+                    isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                    isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
+                ) ||
+                !actionParameter && (
+                    isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                    isRestricted && monitorId && !monitorPermissions[`${monitorId}_video_view`]
+                )
             ){
-                res.end(s.prettyPrint([]))
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
-            req.sql='SELECT * FROM `Timelapse Frames` WHERE ke=?';req.ar=[req.params.ke];
-            if(req.query.archived=='1'){
-                req.sql+=' AND details LIKE \'%"archived":"1"\''
-            }
-            if(!req.params.id){
-                if(user.details.sub&&user.details.monitors&&user.details.allmonitors!=='1'){
-                    try{user.details.monitors=JSON.parse(user.details.monitors);}catch(er){}
-                    req.or=[];
-                    user.details.monitors.forEach(function(v,n){
-                        req.or.push('mid=?');req.ar.push(v)
-                    })
-                    req.sql+=' AND ('+req.or.join(' OR ')+')'
-                }
-            }else{
-                if(!user.details.sub||user.details.allmonitors!=='0'||user.details.monitors.indexOf(req.params.id)>-1){
-                    req.sql+=' and mid=?'
-                    req.ar.push(req.params.id)
+            const cacheKey = req.params.ke + req.params.id + req.params.filename
+            const processFrame = (frame) => {
+                var fileLocation
+                if(frame.details.dir){
+                    fileLocation = `${s.checkCorrectPathEnding(frame.details.dir)}`
                 }else{
-                    res.end('[]');
-                    return;
+                    fileLocation = `${s.dir.videos}`
                 }
-            }
-            req.sql+=' AND filename=?'
-            req.ar.push(req.params.filename)
-            req.sql+=' ORDER BY `time` DESC'
-            s.sqlQuery(req.sql,req.ar,function(err,r){
-                if(r && r[0]){
-                    var frame = r[0]
-                    frame.details = s.parseJSON(frame.details)
-                    var fileLocation
-                    if(frame.details.dir){
-                        fileLocation = `${s.checkCorrectPathEnding(frame.details.dir)}`
-                    }else{
-                        fileLocation = `${s.dir.videos}`
-                    }
-                    var selectedDate = req.params.date
-                    if(selectedDate.indexOf('-') === -1){
-                        selectedDate = req.params.filename.split('T')[0]
-                    }
-                    fileLocation = `${fileLocation}${frame.ke}/${frame.mid}_timelapse/${selectedDate}/${req.params.filename}`
+                var selectedDate = req.params.date
+                if(selectedDate.indexOf('-') === -1){
+                    selectedDate = req.params.filename.split('T')[0]
+                }
+                fileLocation = `${fileLocation}${frame.ke}/${frame.mid}_timelapse/${selectedDate}/${req.params.filename}`
+                if(actionParameter === 'delete'){
+                    deleteTimelapseFrame({
+                        ke: frame.ke,
+                        mid: frame.mid,
+                        filename: req.params.filename,
+                        fileLocation: fileLocation,
+                    })
+                    delete(timelapseFramesCache[cacheKey])
+                    s.closeJsonResponse(res,{ok: true})
+                }else{
                     fs.stat(fileLocation,function(err,stats){
                         if(!err){
                             res.contentType('image/jpeg')
                             res.on('finish',function(){res.end()})
                             fs.createReadStream(fileLocation).pipe(res)
                         }else{
-                            res.end(s.prettyPrint({ok: false, msg: lang[`Nothing exists`]}))
+                            s.closeJsonResponse(res,{ok: false, msg: lang[`Nothing exists`]})
                         }
                     })
-                }else{
-                    res.end(s.prettyPrint({ok: false, msg: lang[`Nothing exists`]}))
                 }
-            })
+            }
+            if(timelapseFramesCache[cacheKey]){
+                processFrame(timelapseFramesCache[cacheKey])
+            }else{
+                s.getDatabaseRows({
+                    monitorRestrictions: monitorRestrictions,
+                    table: 'Timelapse Frames',
+                    groupKey: req.params.ke,
+                    archived: req.query.archived,
+                    filename: req.params.filename,
+                    limit: 1,
+                    rowType: 'frames',
+                    endIsStartTo: true
+                },(response) => {
+                    var frame = response.frames[0]
+                    if(frame){
+                        timelapseFramesCache[cacheKey] = frame
+                        timelapseFramesCacheTimeouts[cacheKey] = setTimeout(function(){
+                            delete(timelapseFramesCache[cacheKey])
+                        },1000 * 60 * 10)
+                        processFrame(frame)
+                    }else{
+                        s.closeJsonResponse(res,{ok: false, msg: lang[`Nothing exists`]})
+                    }
+                })
+            }
         },res,req);
     });
     /**
@@ -332,33 +636,63 @@ module.exports = function(s,config,lang,app,io){
             })
         },res,req);
     });
-    var buildTimelapseVideos = function(){
-        var dateNow = new Date()
-        var hoursNow = dateNow.getHours()
-        if(hoursNow === 1){
-            var dateNowMoment = moment(dateNow).utc().format('YYYY-MM-DDTHH:mm:ss')
-            var dateMinusOneDay = moment(dateNow).utc().subtract(1, 'days').format('YYYY-MM-DDTHH:mm:ss')
-            s.sqlQuery('SELECT * FROM `Timelapse Frames` WHERE time => ? AND time =< ?',[dateMinusOneDay,dateNowMoment],function(err,frames){
-                console.log(frames.length)
-                var groups = {}
-                frames.forEach(function(frame){
-                    if(groups[frame.ke])groups[frame.ke] = {}
-                    if(groups[frame.ke][frame.mid])groups[frame.ke][frame.mid] = []
-                    groups[frame.ke][frame.mid].push(frame)
+    s.onOtherWebSocketMessages((d,connection) => {
+        switch(d.f){
+            case'timelapseVideoBuild':
+                initiateTimelapseVideoBuild({
+                    groupKey: d.ke,
+                    monitorId: d.mid,
+                    framesPosted: d.frames,
+                    framesPerSecond: d.fps,
+                }).then((buildResponse) => {
+                    s.tx({
+                        f: 'timelapse_build_requested',
+                        ke: d.ke,
+                        mid: d.mid,
+                        buildResponse: buildResponse,
+                    },'GRP_'+d.ke);
                 })
-                Object.keys(groups).forEach(function(groupKey){
-                    Object.keys(groups[groupKey]).forEach(function(monitorId){
-                        var frameSet = groups[groupKey][monitorId]
-                        s.createVideoFromTimelapse(frameSet,30,function(response){
-                            if(response.ok){
-
-                            }
-                            console.log(response.fileLocation)
-                        })
-                    })
-                })
-            })
+            break;
         }
+    })
+    function buildTimelapseVideos(){
+        return new Promise((resolve,reject) => {
+            var dateNow = new Date()
+            var hoursNow = dateNow.getHours()
+            if(hoursNow === 1){
+                var dateNowMoment = moment(dateNow).utc().format('YYYY-MM-DDTHH:mm:ss')
+                var dateMinusOneDay = moment(dateNow).utc().subtract(1, 'days').format('YYYY-MM-DDTHH:mm:ss')
+                s.knexQuery({
+                    action: "select",
+                    columns: "*",
+                    table: "Timelapse Frames",
+                    where: [
+                        ['time','=>',dateMinusOneDay],
+                        ['time','=<',dateNowMoment],
+                    ]
+                },async function(err,frames) {
+                    var groups = {}
+                    frames.forEach(function(frame){
+                        if(groups[frame.ke])groups[frame.ke] = {}
+                        if(groups[frame.ke][frame.mid])groups[frame.ke][frame.mid] = []
+                        groups[frame.ke][frame.mid].push(frame)
+                    })
+                    const groupKeys = Object.keys(groups);
+                    for (let i = 0; i < groupKeys.length; i++) {
+                        const groupKey = groupKeys[i]
+                        const monitorIds = Object.keys(groups[groupKey]);
+                        for (let ii = 0; ii < monitorIds.length; ii++) {
+                            const monitorId = monitorIds[ii]
+                            const frameSet = groups[groupKey][monitorId]
+                            await createVideoFromTimelapse(frameSet,30)
+                        }
+                    }
+                    resolve()
+                })
+            }else{
+                resolve()
+            }
+        })
     }
     // Auto Build Timelapse Videos
     if(config.autoBuildTimelapseVideosDaily === true){

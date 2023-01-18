@@ -1,0 +1,16 @@
+<main class="container page-tab pt-3" id="tab-logViewer">
+    <form class="dark row">
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+          include fieldBuilders.ejs
+        %>
+        <% Object.keys(define['Log Viewer'].blocks).forEach(function(blockKey){
+              var accountSettings = define['Log Viewer'].blocks[blockKey]
+              drawBlock(accountSettings)
+          }) %>
+    </form>
+    <script src="<%-window.libURL%>assets/js/bs5.logViewer.js"></script>
+</main>

@@ -1,6 +1,8 @@
+<% var pageTitle = lang.Shinobi %>
 <% include blocks/header %>
 <script>var $user=<%- JSON.stringify($user) %>;</script>
-<link rel="stylesheet" href="<%-window.libURL%>libs/css/bootstrap.min.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/css/bootstrap5-theme.css">
 <div id="main" class="container">
     <a class="btn btn-danger btn-lg" record>Stream</a>
     <div>
@@ -19,10 +21,9 @@ requires https or firefox
 </div>
 <video id="video"><source></video>
 <canvas id="canvas"></canvas>
-<script src="<%-window.libURL%>libs/js/jquery.min.js"></script>
-<script src="<%-window.libURL%>libs/js/socket.io.js"></script>
-<script src="<%-window.libURL%>libs/js/basic.js"></script>
-<script src="<%-window.libURL%>libs/js/menu.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/jquery.min.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/socket.io.min.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/basic.js"></script>
 <script>
 $.ccio = {}
 $.ls = localStorage
@@ -202,62 +203,71 @@ var mediaRecorder;
 var chunks = [];
 var count = 0;
 
-$.ccio.vid = {element:$('#video')[0],canvas:$('#canvas')[0],data:$('#data')};
-$.ccio.vid.element.controls = false;
-navigator.getUserMedia(constraints,function(stream,fn) {
-    $.ccio.vid.stream = stream;
-    $.ccio.vid.element.srcObject = stream;
-    $('[record]').click($.ccio.startSending)
-    ////////
-    if($user.mons.length>0&&$.ls.getItem('Shinobi_Dashcam')){
-        $('[monitor="'+$.ls.getItem('Shinobi_Dashcam')+'"]').click()
-        if($.ls.getItem('Shinobi_Dashcam_Started') === 1){
-            setTimeout(function(){
-                $('[record]').click()
-            },3000)
+function initVideoStream(){
+    $.ccio.vid = {element:$('#video')[0],canvas:$('#canvas')[0],data:$('#data')};
+    $.ccio.vid.element.controls = false;
+    navigator.getUserMedia(constraints,function(stream,fn) {
+        $.ccio.vid.stream = stream;
+        $.ccio.vid.element.srcObject = stream;
+        $('[record]').click($.ccio.startSending)
+        ////////
+        if(loadedMonitors.length>0&&$.ls.getItem('Shinobi_Dashcam')){
+            $('[monitor="'+$.ls.getItem('Shinobi_Dashcam')+'"]').click()
+            if($.ls.getItem('Shinobi_Dashcam_Started') === 1){
+                setTimeout(function(){
+                    $('[record]').click()
+                },3000)
+            }
+        }else{
+            $.ccio.selected = null;
         }
-    }else{
-        $.ccio.selected = null;
-    }
-}, function(err){console.error('getUserMedia',err)});
+    }, function(err){console.error('getUserMedia',err)});
+}
 
-
-
-
-
-
-
-
-
-
-    //draw selectable mons
+var loadedMonitors = []
+function drawMonitorList(callback){
     var tmp='';
-    if($user.mons&&$user.mons.length>0){
-        $.ccio.mon={};
-        $.each($user.mons,function(n,v){
-            v.details=JSON.parse(v.details);
-            $.ccio.mon[v.mid]=v;
-            tmp+='<a class="list-group-item" monitor="'+v.mid+'">'+v.name+'</a>';
-        })
-        $('#monitors').html(tmp)
-    }else{
-        tmp+="<h2>No Streamer Monitors Setup</h2>"
-        tmp+="<small>Login to the Dashboard and add one. Set it to record or watch only.</small>"
-        $('#msg').html(tmp)
-    }
-    delete(tmp);
-    $('body').on('click','[monitor]',function(e){
-        e.e=$(this);e.a=e.e.attr('monitor'),e.m=$.ccio.mon[e.a];
-        $.ccio.selected=e.a;$('#selected').html(e.a);
-        if(e.m.details.sfps&&e.m.details.sfps!==''){$.ccio.framerate=e.m.details.sfps}else{$.ccio.framerate=1;}
-        $.ls.setItem('Shinobi_Dashcam',e.a)
-        $('[monitor]').removeClass('active'),e.e.addClass('active');
+    $('#monitors').empty()
+    $.get($user.auth_token + '/monitor/' + $user.ke,function(monitors){
+        loadedMonitors = [];
+        if(monitors && monitors.length > 0){
+            $.ccio.mon={};
+            $.each(monitors,function(n,v){
+                if(v.type === 'dashcam'){
+                    loadedMonitors.push(v)
+                    v.details = JSON.parse(v.details);
+                    $.ccio.mon[v.mid] = v;
+                    tmp += '<a class="list-group-item" monitor="'+v.mid+'">'+v.name+'</a>';
+                }
+            })
+            $('#monitors').html(tmp)
+        }else{
+            tmp+="<h2>No Dashcam Monitors Setup</h2>"
+            tmp+="<small>Login to the Dashboard and add one. Set it to record or watch only.</small>"
+            $('#msg').html(tmp)
+        }
+        callback(monitors)
     })
+}
+
+$(document).ready(function(){
+    drawMonitorList(function(){
+        initVideoStream()
+    })
+})
+
+$('body').on('click','[monitor]',function(e){
+    e.e=$(this);e.a=e.e.attr('monitor'),e.m=$.ccio.mon[e.a];
+    $.ccio.selected=e.a;$('#selected').html(e.a);
+    if(e.m.details.sfps&&e.m.details.sfps!==''){$.ccio.framerate=e.m.details.sfps}else{$.ccio.framerate=1;}
+    $.ls.setItem('Shinobi_Dashcam',e.a)
+    $('[monitor]').removeClass('active'),e.e.addClass('active');
+})
 
 
 $('body')
 .on('click','.logout',function(e){
-    localStorage.removeItem('SageTeaViewCCTVLogin_'+location.host);location.href='/';
+    localStorage.removeItem('ShinobiLogin_'+location.host);location.href='/';
 })
     function getBrowser(){
 	var nVer = navigator.appVersion;

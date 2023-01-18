@@ -2,60 +2,59 @@
 <html lang="en">
 <head>
     <title><%-lang.Superuser%> - <%-lang.Shinobi%></title>
-    <% window.libURL = originalURL + global.s.checkCorrectPathEnding(config.webPaths.admin) %>
+    <%
+        if(config.baseURL)window.libURL = config.baseURL;
+        if(!window.libURL)window.libURL = originalURL;
+     %>
     <% include blocks/header-meta.ejs %>
     <% include blocks/header-favicon.ejs %>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
     <!--     Fonts and icons     -->
-    <link href="<%-window.libURL%>libs/css/montserrat.css" rel="stylesheet" />
-    <link href="<%-window.libURL%>libs/css/font-awesome.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/font-awesome/css/font-awesome.min.css">
     <!-- CSS Files -->
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/bootstrap4.min.css" />
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/main.dash2.css" />
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/pnotify.custom.min.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/now-ui-kit.css?v=1.1.0" />
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/dash2.basic.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/dash2.modal.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/dash2.forms.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/super-page.css" />
-    <script src="<%-window.libURL%>libs/js/jquery.min.js"></script>
-    <script src="<%-window.libURL%>libs/js/jquery-ui.min.js"></script>
-    <script src="<%-window.libURL%>libs/js/basic.js"></script>
-    <script src="<%-window.libURL%>libs/js/jquery.serialize.js"></script>
-    <script src="<%-window.libURL%>libs/js/pnotify.custom.min.js"></script>
-    <script src="<%-window.libURL%>libs/js/popper.min.js" type="text/javascript"></script>
-    <script src="<%-window.libURL%>libs/js/bootstrap4.min.js" type="text/javascript"></script>
-    <script src="<%-window.libURL%>libs/js/dash2.confirm.js" type="text/javascript"></script>
-    <style>
-        .form-group label>div:first-child{width:40%}
-        .list-group li .form-group {margin:0}
-        a {cursor:pointer}
-    </style>
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bootstrap5-theme.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/pnotify.custom.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.forms.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/gradients.css" />
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/super-page.css" />
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/dashboard.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.darktheme.css">
+    <script src="<%-window.libURL%>assets/vendor/js/jquery.min.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/jquery-ui.min.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/basic.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/jquery.serialize.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/pnotify.custom.min.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/bootstrap5/js/bootstrap.bundle.min.js"></script>
+    <script src="<%-window.libURL%>assets/js/bs5.confirm.js" type="text/javascript"></script>
+
+    <script>
+        var superApiPrefix = location.pathname.indexOf('/s/') > -1 ? (location.pathname.endsWith('/') ? location.pathname : location.pathname + '/') : "<%- `${originalURL}${config.webPaths.superApiPrefix}` %>"
+    </script>
     <% customAutoLoad.superLibsCss.forEach(function(lib){ %>
         <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">
     <% }) %>
+    <% customAutoLoad.superAssetsCss.forEach(function(lib){ %>
+        <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/<%-lib%>">
+    <% }) %>
 </head>
+<script>$user=<%-JSON.stringify($user)%></script>
 
-<body class="index-page sidebar-collapse bg-hexagon">
+<body class="bg-gradient-dark dark">
     <!-- Navbar -->
-    <nav id="main-nav" class="navbar navbar-expand-lg bg-primary fixed-top" color-on-scroll="400">
+    <nav id="main-nav" class="navbar navbar-expand-lg bg-dark fixed-top" color-on-scroll="400">
         <div class="container">
             <div class="navbar-translate">
                 <a tabindex="1" class="navbar-brand logout" style="outline:0" href="/" data-placement="bottom">
                     <%-lang.superAdminTitle%>
                 </a>
-                <button class="navbar-toggler navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-bar bar1"></span>
-                    <span class="navbar-toggler-bar bar2"></span>
-                    <span class="navbar-toggler-bar bar3"></span>
-                </button>
             </div>
             <div class="collapse navbar-collapse justify-content-end" id="navigation" data-nav-image="<%-window.libURL%>libs/img/blurred-image-1.jpg">
                 <ul class="nav navbar-nav navbar-right">
                     <li class="nav-item">
-                        <a href="javascript:location.href=location.pathname" class="nav-link" class="logout">
-                            <i class="fa fa-sign-out"></i>
+                        <a class="nav-link logout">
+                            <i class="fa fa-sign-out-alt"></i>
                             <p class="d-lg-none d-xl-none"><%-lang.Logout%></p>
                         </a>
                     </li>
@@ -65,136 +64,95 @@
     </nav>
     <!-- End Navbar -->
     <div class="wrapper">
-        <div class="page-header clear-filter" filter-color="primary">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div id="main-card" class="card">
-                            <ul class="nav nav-tabs nav-tabs-neutral justify-content-center bg-primary" id="tablist" role="tablist">
-                                <li class="nav-item">
-                                    <a class="nav-link active" data-toggle="tab" href="#accounts" role="tab"><%-lang['Accounts']%></a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#config" role="tab"><%-lang['Configuration']%></a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#system" role="tab"><%-lang['Controls and Logs']%></a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#changeSuperPreferences" role="tab"><%-lang['Preferences']%></a>
-                                </li>
-                            </ul>
-                            <div class="card-body">
-                                <!-- Tab panes -->
-                                <div class="tab-content text-center">
-                                    <div class="tab-pane active" id="accounts" role="tabpanel">
-                                        <nav class="navbar navbar-rounded navbar-expand-lg bg-primary">
-                                            <div class="container">
-                                                <div class="collapse navbar-collapse">
-                                                    <ul class="navbar-nav">
-                                                        <li class="nav-item">
-                                                            <a class="nav-link add">
-                                                                <p><i class="fa fa-plus-square-o"></i> <%-lang['Add']%> <%-lang['Accounts']%></p>
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="main-card" class="card bg-dark">
+                        <ul class="nav nav-tabs nav-tabs-neutral justify-content-center bg-dark" id="tablist" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" data-bs-target="#accounts" role="tab"><%-lang['Accounts']%></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#config" role="tab"><%-lang['Configuration']%></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#system" role="tab"><%-lang['Controls and Logs']%></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#changeSuperPreferences" role="tab"><%-lang['Preferences']%></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#easyRemoteAccess" role="tab"><%-lang['Easy Remote Access (P2P)']%></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#customAutoLoad" role="tab"><%-lang['Custom Auto Load']%></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#superPluginManager" role="tab"><%-lang['Plugin Manager']%></a>
+                            </li>
+                        </ul>
+                        <div class="card-body text-white" style="background:#263343">
+                            <!-- Tab panes -->
+                            <div class="tab-content text-center">
+                                <div class="tab-pane active" id="accounts" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-5 text-left">
+                                            <% include blocks/heyActivate.ejs %>
+                                            <% include blocks/systemInfoBlock.ejs %>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <div class="mb-4"><a href="#" class="add btn btn-block btn-default"><i class="fa fa-plus"></i> <%- lang.Add %></a></div>
+                                            <div class="form-group-group red p-1" style="max-height:400px;overflow:auto">
+                                                <div id="accounts-list"></div>
                                             </div>
-                                        </nav>
-                                        <table class="table table-striped"></table>
-                                    </div>
-                                    <div class="tab-pane" id="config" role="tabpanel">
-                                        <small class="pull-right msg"></small>
-                                        <nav class="navbar navbar-rounded navbar-expand-lg bg-success">
-                                            <div class="container">
-                                                <div class="collapse navbar-collapse">
-                                                    <ul class="navbar-nav">
-                                                        <li class="nav-item">
-                                                            <a class="nav-link submit">
-                                                                <p><i class="fa fa-check"></i> <%-lang.Save%></p>
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </nav>
-                                        <form class="form-group-group red" id="conf_json">
-                                            <small class="pull-right msg"></small>
-                                            <div id="configForHumans"></div>
-                                            <div class="form-group">
-                                                <textarea name="json" style="height:300px;font-family: monospace;" class="form-control"></textarea>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <div class="tab-pane text-left" id="system" role="tabpanel">
-                                        <nav class="navbar navbar-rounded navbar-expand-lg bg-primary">
-                                            <div class="container">
-                                                <div class="collapse navbar-collapse">
-                                                    <ul class="navbar-nav">
-                                                        <li class="nav-item">
-                                                            <a class="nav-link" system="deleteLogs">
-                                                                <p><i class="fa fa-trash-o"></i> <%-lang['Delete']%> <%-lang['Logs']%></p>
-                                                            </a>
-                                                        </li>
-                                                        <li class="nav-item">
-                                                            <a class="nav-link" restart="system">
-                                                                <p><i class="fa fa-retweet"></i> <%-lang['Restart Core']%></p>
-                                                            </a>
-                                                        </li>
-                                                        <li class="nav-item">
-                                                            <a class="nav-link" restart="cron">
-                                                                <p><i class="fa fa-retweet"></i> <%-lang['Restart CRON']%></p>
-                                                            </a>
-                                                        </li>
-                                                        <li class="nav-item">
-                                                            <a class="nav-link" restart="logs">
-                                                                <p><i class="fa fa-retweet"></i> <%-lang['Flush PM2 Logs']%></p>
-                                                            </a>
-                                                        </li>
-
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </nav>
-                                        <div id="logs" style="height:400px;overflow:auto">
-                                            <table class="table table-striped"></table>
                                         </div>
                                     </div>
-                                    <div class="tab-pane text-left" id="changeSuperPreferences" role="tabpanel">
-                                        <% include blocks/changeSuperPreferences.ejs %>
-                                    </div>
                                 </div>
+                                <div class="tab-pane text-left" id="config" role="tabpanel">
+                                    <% include blocks/superConfigEditor.ejs %>
+                                </div>
+                                <div class="tab-pane text-left" id="system" role="tabpanel">
+                                    <% include blocks/superSystemTab.ejs %>
+                                </div>
+                                <div class="tab-pane text-left" id="customAutoLoad" role="tabpanel">
+                                    <% include blocks/superCustomAutoLoadManager.ejs %>
+                                </div>
+                                <div class="tab-pane text-left" id="changeSuperPreferences" role="tabpanel">
+                                    <% include blocks/superPreferences.ejs %>
+                                </div>
+                                <div class="tab-pane text-left" id="easyRemoteAccess" role="tabpanel">
+                                    <% include blocks/easyRemoteAccess.ejs %>
+                                </div>
+                                <div class="tab-pane text-left" id="superPluginManager" role="tabpanel">
+                                    <% include blocks/superPluginManager.ejs %>
+                                </div>
+                                <% customAutoLoad.superPageBlocks.forEach(function(block){ %>
+                                    <%- include(block) %>
+                                <% }) %>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row text-center">
-                    <div class="col">
-                        <a href="https://gitlab.com/Shinobi-Systems/Shinobi/commit/<%- currentVersion %>" target="_blank">
-                            <small class="epic-text" style="font-weight: 700;color: #fff;letter-spacing: 2pt;">
-                                Current Version : <%- currentVersion %>
-                            </small>
-                        </a>
-                    </div>
+            </div>
+            <div class="row text-center">
+                <div class="col">
+                    <a href="https://gitlab.com/Shinobi-Systems/Shinobi/commit/<%- currentVersion %>" target="_blank">
+                        <small class="epic-text" style="font-weight: 700;color: #fff;letter-spacing: 2pt;">
+                            Current Version : <%- currentVersion %>
+                        </small>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     <div id="temp" style="display:none"></div>
 </body>
-<script>
-    var superApiPrefix = "<%=originalURL%><%=config.webPaths.superApiPrefix%>"
-</script>
 <% include blocks/confirm.ejs %>
-<% customAutoLoad.superPageBlocks.forEach(function(block){ %>
-    <%- include(block) %>
-<% }) %>
-<script src="<%-window.libURL%>libs/js/pnotify.custom.min.js" type="text/javascript"></script>
-<script><% include ../libs/js/moment.js %></script>
-<script src="<%-window.libURL%>libs/js/livestamp.min.js" type="text/javascript"></script>
-<script src="<%-window.libURL%>libs/js/socket.io.js" type="text/javascript"></script>
-<script src="<%-window.libURL%>libs/js/placeholder.js" type="text/javascript"></script>
-<script src="<%-window.libURL%>libs/js/now-ui-kit.js?v=1.1.0" type="text/javascript"></script>
+<script src="<%-window.libURL%>assets/vendor/js/pnotify.custom.min.js" type="text/javascript"></script>
+<script src="<%-window.libURL%>assets/vendor/moment-with-locales.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/livestamp.min.js" type="text/javascript"></script>
+<script src="<%-window.libURL%>assets/vendor/js/socket.io.min.js" type="text/javascript"></script>
+<script src="<%-window.libURL%>assets/vendor/js/placeholder.js" type="text/javascript"></script>
 <script type="text/javascript">
     var lang = <%- JSON.stringify(lang) || {} %>;
     PNotify.prototype.options.styling = "fontawesome";
@@ -213,8 +171,39 @@
     }
 </script>
 
-<script>$user=<%-JSON.stringify($user)%></script>
 <script>
+var loadedUsers = {}
+function drawUserList(){
+    loadedUsers = {}
+    $('#accounts-list').empty()
+    $.get(superApiPrefix + $user.sessionKey + '/accounts/list/admin',function(data){
+        $.each(data.users,function(n,v){
+            loadedUsers[v.ke] = v
+            $.ccio.tm(0,v,'#accounts-list')
+        })
+    })
+}
+function drawSystemLogs(){
+    $('#logs-list').empty()
+    $.get(superApiPrefix + $user.sessionKey + '/logs',function(data){
+        if(data.ok){
+            $.each(data.logs.reverse(),function(n,v){
+                $.ccio.tm(4,v,'#logs-list')
+            })
+        }else{
+            var html = `<div class="mt-3 mb-4"><p><i class="fa fa-4x fa-exclamation-circle text-danger"></i></p><h3>Database is not running or unreachable</h3><p>Please ensure it is started then restart Shinobi.</p><p>By default Shinobi uses <b>MariaDB</b>, an SQL server, as the database engine.</p><p>If you need to install the database files again you may follow <a target="_blank" href="https://shinobi.video/articles/2019-02-22-how-to-install-the-shinobi-database-manually">this article.</a></p></div>`
+            $('#main-card').html(html)
+        }
+    })
+}
+function drawSystemInfo(){
+    $.get(superApiPrefix + $user.sessionKey + '/system/info',function(data){
+        if(data.ok){
+            $('.super-system-info').html($.ccio.init('jsontoblock',data.info))
+        }
+    })
+}
+
 $.ccio={accounts:{}};$.ls=localStorage;
 if(!$user.lang||$user.lang==''){
     $user.lang="<%-config.language%>"
@@ -229,22 +218,24 @@ switch($user.lang){
         })
     break;
 }
-$.ccio.ws = io(location.origin,{
+$.ccio.ws = io(`${location.origin.split('/super')[0]}/`,{
     path : tool.checkCorrectPathEnding(location.pathname)+'socket.io'
-})
-$.ccio.cx = function(x){
-    return $.ccio.ws.emit('super',x)
-}
+});
+
+$.ccio.cx=function(x){return $.ccio.ws.emit('super',x)}
 $.ccio.ws.on('connect',function(d){
-    $.ccio.cx({f:'init',mail:$user.mail,pass:$user.pass})
+    $.ccio.cx({f:'init',mail:$user.mail,pass:$user.pass,machineId: `<%- config.machineId %>`})
 })
 $.ccio.ws.on('f',function(d){
     switch(d.f){
         case'init_success':
             $user.sessionKey = d.superSessionKey
+            drawUserList()
+            drawSystemLogs()
+            drawSystemInfo()
         break;
         case'log':
-            $.ccio.tm(4,d.log,'#logs table')
+            $.ccio.tm(4,d.log,'#logs-list')
         break;
         case'save_configuration':
             d.msg = 'Saved, Restart Shinobi to apply changes.'
@@ -261,11 +252,11 @@ $.ccio.ws.on('f',function(d){
         break;
         case'add_account':
             d.msg='Account Created';
-            $.ccio.tm(0,d,'#accounts table')
+            $.ccio.tm(0,d,'#accounts-list')
             $.aN.selected = $.ccio.accounts[d.ke]
         break;
         case'delete_account':
-            $('#accounts table tr[ke="'+d.ke+'"]').remove()
+            $('#accounts-list [ke="'+d.ke+'"]').remove()
         break;
     }
     if(d.msg&&typeof d.msg==='string'){
@@ -280,33 +271,27 @@ $.ccio.tm=function(x,d,z,k){
         case 0://account row
             d.detailsJSON=JSON.parse(d.details);
             $.ccio.accounts[d.ke]=d;
-            tmp+='<tr ke="'+d.ke+'"><td><b class="mail">'+d.mail+'</b></td><td>'+d.ke+'</td><td><a tabindex="1" class="permission btn btn-xs btn-primary"><i class="fa fa-lock"></i></a></td><td><a tabindex="1" class="delete btn btn-xs btn-danger"><i class="fa fa-trash-o"></i></a></td></tr>';
+            tmp += `<div class="user-row card bg-dark text-white mb-2" ke="${d.ke}" uid="${d.uid}">
+                <div class="d-flex flex-row flex-padding">
+                    <div class="flex-grow-1 text-left pl-3"><span class="mail">${d.mail}</span></div>
+                    <div><span>${d.ke}</span></div>
+                    <div><a tabindex="1" class="permission btn badge badge-sm badge-info m-0"><i class="fa fa-lock"></i></a></div>
+                    <div><a tabindex="1" class="delete btn badge badge-sm badge-danger m-0"><i class="fa fa-times"></i></a></div>
+                </div>
+            </div>`;
         break;
         case 4://log row, draw to global and monitor
             if(!d.time){d.time=$.ccio.init('t')}
-            tmp+='<tr class="search-row"><td><span title="'+d.time+'" class="livestamp"></span><br><small>'+d.time+'</small><br><small>'+d.mid+'</small></td><td></td><td><pre class="pre-inline">'+$.ccio.init('jsontoblock',JSON.parse(d.info))+'</pre></td></tr>'
-        break;
-        case 5://config element
-            if(d.value instanceof Object){
-                tmp += '<div class="form-group config-row" layer="'+d.layer+'">\
-                        <div><input class="form-control key" type="text" value="'+d.key+'"></div>\
-                        <ul class="list-group valueObject" style="margin:0">'
-                ++d.layer
-                $.each(d.value,function(key,value){
-                    tmp += '<li class="list-group-item">'
-                    tmp += $.ccio.tm(5,{key:key,value:value,layer:d.layer})
-                    tmp += '</li>'
-                })
-                tmp += '</ul>'
-                tmp += '</div>'
-            }else{
-                tmp += '<div class="form-group config-row" layer="'+d.layer+'">\
-                    <label>\
-                        <div><input class="form-control key" type="text" value="'+d.key+'"></div>\
-                        <div><input class="form-control value" type="text" value="'+d.value+'"></div>\
-                    </label>\
-                </div>'
-            }
+            tmp += `<div class="card bg-dark search-row d-flex flex-row flex-padding mb-3">
+                <div>
+                    <span title="${d.time}" class="livestamp"></span><br>
+                    <small>${d.time}</small><br>
+                    <small class="badge badge-primary">${d.mid}</small>
+                </div>
+                <div class="flex-grow-1">
+                    <pre class="pre-inline text-white mb-0">${$.ccio.init('jsontoblock',d.info)}</pre>
+                </div>
+            </div>`
         break;
     }
     if(z){
@@ -318,12 +303,6 @@ $.ccio.tm=function(x,d,z,k){
         break;
     }
     return tmp;
-}
-users=<%-JSON.stringify(users)%>;
-if(users){
-    $.each(users,function(n,v){
-        $.ccio.tm(0,v,'#accounts table')
-    })
 }
 $.ccio.init=function(x,d,z,k){
     if(!k){k={}};k.tmp='';
@@ -357,201 +336,21 @@ $.ccio.init=function(x,d,z,k){
 }
 //logs
 $.logs={e:$('#logs')}
-//config editor
-<%
-    var stringedConfig = JSON.stringify(plainConfig)
-%>
-var config = <%- JSON.stringify(plainConfig) || [] %>
-$.conf={e:$('#config')};
-$.conf.f = $.conf.e.find('form')
-$.conf.configForHumans=$('#configForHumans')
-$.conf.draw=$.conf.e.find('[name="json"]')
-$.conf.valid=1;
-$.conf.jsonToFields = function(){
-//    var tmp = ''
-//    $.each(config,function(key,value){
-//        var layer = 0
-//        tmp += $.ccio.tm(5,{key:key,value:value,layer:layer})
-//    })
-//    $.conf.configForHumans.html(tmp)
-}
-$.conf.draw.val(JSON.stringify(<%-stringedConfig%>,null,3))
-$.conf.draw.keyup(function(){
-    var msg=''
-    var color=''
-    try{
-        config = $.parseJSON($.conf.draw.val())
-        msg = 'Valid JSON'
-        color = 'success'
-        $.conf.valid = 1
-        $.conf.jsonToFields()
-    }catch(er){
-        msg = 'Not a valid JSON'
-        color = 'danger'
-        $.conf.valid = 0
-    }
-    new PNotify({text:msg,type:color})
-})
-$.conf.e.find('.submit').click(function(e){
-    $.conf.f.submit()
-})
-$.conf.f.submit(function(e){
-    e.preventDefault()
-    if($.conf.valid===1){
-        $.confirm.e.modal('show');
-        $.confirm.title.html('Save Configuration <small>conf.json</small>')
-        e.html='<p>This is a change being applied to the configuration file (conf.json). Are you sure you want to do this? You must restart Shinobi for these changes to take effect. <b>The JSON below is what you are about to save.</b></p>'
-        e.html+='<pre>'+JSON.stringify($.parseJSON($.conf.draw.val()),null,3)+'</pre>'
-        $.confirm.body.html(e.html)
-        $.confirm.click({title:lang.Save,class:'btn-success'},function(){
-            $.post('<%=originalURL%><%=config.webPaths.superApiPrefix%>'+$user.sessionKey+'/system/configure',{
-                data: $.conf.draw.val()
-            },function(data){
-                // console.log(data)
-            })
-            // $.ccio.cx({f:'system',ff:'configure',data:$.parseJSON($.conf.draw.val())})
-        });
-    }else{
-        new PNotify({text:'Invalid JSON Syntax, Cannot Save.',type:'error'})
-    }
-    return false;
-})
-$.conf.e.on('keyup','.config-row input',function(){
-    var newConfig = {}
-    var checkRow = function(v,object){
-        var _this = $(v)
-        var key = _this.find('.key:first').val()
-        var layer = parseInt(_this.attr('layer'))
-        var list = _this.find('ul').first()
-        var isObject = list.length > 0
-        if(isObject){
-            if(!object[key]){
-                if(isNaN(key) === true){
-                    object[key] = {}
-                }else{
-                    object[key] = []
-                }
-            }
-            list.find('.config-row[layer="'+(layer+1)+'"]').each(function(n,v){
-                checkRow(v,object[key])
-            })
-        }else{
-            var value = _this.find('.value').val()
-            switch(value){
-                case'true':
-                    value = true
-                break;
-                case'false':
-                    value = false
-                break;
-                default:
-                    if(isNaN(value) === false){
-                        value = parseFloat(value)
-                    }
-                break;
-            }
-            object[key] = value
-        }
-
-    }
-    $.conf.configForHumans.children('.config-row').each(function(n,v){
-        checkRow(v,newConfig)
-    })
-    $.conf.draw.val(JSON.stringify(newConfig,null,3))
-    console.log(newConfig)
-})
-$.conf.f.ready(function(){
-    $.conf.jsonToFields()
-})
-//sys controls
-$.system={e:$('#system')}
-$.system.e.find('[system]').click(function(e){
-    switch($(this).attr('system')){
-        case'deleteLogs':
-            $.confirm.e.modal('show');
-            $.confirm.title.html('<%=lang['Delete Logs']%> <small>'+e.u+'</small>')
-            e.html='Do you want to delete these logs? User logs will <b>not</b> be deleted.'
-            $.confirm.body.html(e.html)
-            $.confirm.click({title:lang.Delete,class:'btn-danger'},function(){
-                // $.ccio.cx({f:'logs',ff:'delete',ke:'$'})
-                $.get('<%=originalURL%><%=config.webPaths.superApiPrefix%>'+$user.sessionKey+'/logs/delete',function(data){
-                    console.log(data)
-                })
-                $.logs.e.find('table').empty()
-            });
-        break;
-        case'update':
-            $.confirm.e.modal('show')
-            $.confirm.title.html('<%=lang.Update%> Shinobi?')
-            $.confirm.body.html('Updating Shinobi means overwriting files. If you have modified any files yourself you should update Shinobi manually.')
-            $.confirm.click({title:lang.Update,class:'btn-danger'},function(){
-                // $.ccio.cx({f:'system',ff:'update'})
-                $.get('<%=originalURL%><%=config.webPaths.superApiPrefix%>'+$user.sessionKey+'/system/update',function(data){
-                    console.log(data)
-                })
-            })
-        break;
-    }
-})
-$.system.e.find('[restart]').click(function(e){
-    $.confirm.e.modal('show');
-    e.html=''
-    e.title=''
-    e.target=$(this).attr('restart').split(',')
-    e.target.forEach(function(v){
-        switch(v){
-            case'system':
-                e.html+='<p>Do you want to restart the core (camera.js)? plugins will not be restarted. They will reconnect when Shinobi is back online.</p>'
-            break;
-            case'cron':
-                e.html+='<p>Do you want to restart the CRON (cron.js)?</p>'
-            break;
-            case'logs':
-                e.html+='<p>Flush PM2 console logs? The logs saved in the database will <b>not</b> be deleted.</p>'
-            break;
-        }
-    })
-    $.confirm.title.html('<%=lang.Restart%>?')
-    $.confirm.body.html(e.html)
-    $.confirm.click({title:lang.Restart,class:'btn-danger'},function(){
-        // $.ccio.cx({f:'system',ff:'restart',target:e.target})
-        $.get('<%=originalURL%><%=config.webPaths.superApiPrefix%>'+$user.sessionKey+'/system/restart/'+encodeURIComponent(e.target),function(data){
-            console.log(data)
-        })
-    });
-})
-$.changeSuperPreferences = {
-    window : $('#changeSuperPreferences')
-}
-$.changeSuperPreferences.form = $.changeSuperPreferences.window.find('form')
-$.changeSuperPreferences.form.find('.submit').click(function(){
-    $.changeSuperPreferences.form.submit()
-})
-$.changeSuperPreferences.form.submit(function(e){
-    e.preventDefault()
-    var formValues = $(this).serializeObject()
-    // $.ccio.cx({f:'accounts',ff:'saveSuper',form:formValues})
-    $.post('<%=originalURL%><%=config.webPaths.superApiPrefix%>'+$user.sessionKey+'/accounts/saveSettings',{
-        data: JSON.stringify(formValues)
-    },function(data){
-        console.log(data)
-    })
-    return false
-})
 ////
-$(document).ready(function(){
-    $.each(<%-JSON.stringify(Logs)%>,function(n,v){
-        $.ccio.tm(4,v,'#logs table')
-    })
-})
-    //
 $('body')
 .on('click','.logout',function(e){
-    localStorage.removeItem('SageTeaViewCCTVLogin_'+location.host);location.href='/';
+    localStorage.removeItem('ShinobiLogin_'+location.host);
+    location.href = location.href.split('/super')[0];
 })
 </script>
 <% include blocks/mainpermissions.ejs %>
 <% customAutoLoad.superLibsJs.forEach(function(lib){ %>
     <script src="<%-window.libURL%>libs/js/<%-lib%>"></script>
+<% }) %>
+<% customAutoLoad.superAssetsJs.forEach(function(lib){ %>
+    <script src="<%-window.libURL%>assets/js/<%-lib%>"></script>
+<% }) %>
+<% customAutoLoad.superRawJs.forEach(function(scriptData){ %>
+    <script><%- scriptData %></script>
 <% }) %>
 </html>
