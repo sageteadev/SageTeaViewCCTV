@@ -12,7 +12,7 @@ currentCommitNumber=${splitBuildString[0]}
 repo="Pro"
 if [[ $@ == *'help'* ]] || [ ! "$1" ]; then
     echo "========================================================="
-    echo "==!! Shinobi : The Open Source CCTV and NVR Solution !!=="
+    echo "==!! SageTeaView CCTV:Open Source CCTV and NVR Solution !!=="
     echo "========================================================="
     if [ ! "$1" ]; then
         echo "You are missing function parameters."

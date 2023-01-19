@@ -1,14 +1,14 @@
 # SageTeaViewCCTV 
 ### (GPLv3 + AGPLv3)
 
-SageTeaViewCCTV is the Open Source CCTV Solution written in Node.JS Forked from Shinobi CE project Shinobi Systems. Designed with multiple account system, Streams by WebSocket, and Save to WebM. SageTeaViewCCTV i can record IP Cameras and Local Cameras.
+SageTeaViewCCTV is the Open Source CCTV Solution written in Node.JS Forked from Shinobi Systems https://gitlab.com/Shinobi-Systems/Shinobi by Moe Alam. Designed with multiple account system, Streams by WebSocket, and Save to WebM. SageTeaViewCCTV can record IP Cameras and Local Cameras.
 
 ## How to run
 
 - Pull Image:
 
 ```console
-´docker pull sagetea/sageteaviewcctv:dev´
+docker pull sagetea/sageteaviewcctv:dev
 ```
 
 - Run:
