@@ -1,6 +1,6 @@
 {
-  "name": "shinobi",
-  "productName": "Shinobi",
+  "name": "sageteaviewcctv",
+  "productName": "SageTeaViewCCTV",
   "version": "2.0.0",
   "description": "CCTV and NVR in Node.js",
   "main": "camera.js",

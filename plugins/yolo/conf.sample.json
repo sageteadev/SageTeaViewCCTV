@@ -1,8 +1,0 @@
-{
-  "plug":"Yolo",
-  "host":"localhost",
-  "port":8080,
-  "key":"Yolo123123",
-  "mode":"client",
-  "type":"detector"
-}

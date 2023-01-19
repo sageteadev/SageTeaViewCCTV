@@ -488,7 +488,7 @@
   "startUpText4": "শুরু, সব মনিটর সেট দেখতে এবং রেকর্ড",
   "startUpText5": "Shinobi প্রস্তুত হয়.",
   "superAdminText": "\"সুপার.json\" বিদ্যমান নয়. দয়া করে নামান্তর \"সুপার.নমুনা.json\", \"সুপার.json\".",
-  "superAdminTitle": "Shinobi : সুপার অ্যাডমিন",
+  "superAdminTitle": "SageTeaViewCCTV : সুপার অ্যাডমিন",
   "total": "মোট",
   "updateKeyText1": "\"updateKey\" থেকে অনুপস্থিত, \"conf.json\", আপডেট করতে পারবেন না এই ভাবে যতক্ষণ না আপনি এটি যোগ করুন.",
   "updateKeyText2": "\"updateKey\" ভুল হয়.",

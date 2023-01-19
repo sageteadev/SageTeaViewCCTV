@@ -90,7 +90,7 @@ node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTIO
 echo "============="
 echo "Default Superuser : admin@shinobi.video"
 echo "Default Password : admin"
-echo "Log in at http://HOST_IP:SHINOBI_PORT/super"
+echo "Log in at http://HOST_IP:SAGETEA_PORT/super"
 if [ -e "/config/super.json" ]; then
     cp /config/super.json super.json
 elif [ ! -e "./super.json" ]; then
@@ -103,5 +103,5 @@ if [ -e "/config/init.extension.sh" ]; then
 fi
 
 # Execute Command
-echo "Starting Shinobi ..."
+echo "Starting SageTeaViewCCTV ..."
 exec "$@"

@@ -488,7 +488,7 @@
   "startUpText4": "Starte alle Monitore.",
   "startUpText5": "Shinobi ist bereit.",
   "superAdminText": "\"super.json\" ist nicht vorhanden. Die Datei \"super.Probe.json\" kann als Vorlage für \"super.json\" verwendet werden.",
-  "superAdminTitle": "Shinobi : Super Admin",
+  "superAdminTitle": "SageTeaViewCCTV : Super Admin",
   "total": "insgesamt",
   "undefined": "nicht definiert",
   "updateKeyText1": "Kein \"updateKey\" in \"conf.json\" vorhanden. Es werden keine Updates durchgeführt.",

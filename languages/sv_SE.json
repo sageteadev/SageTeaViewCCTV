@@ -950,7 +950,7 @@
 "startUpText5": "Shinobi är redo.",
 "startUpText6": "Föräldralösa Videor hittade och infogade",
 "superAdminText": "\"super.json\" existerar inte. Vänligen byt namn \"super.sample.json\" till en \"super.json\".",
-"superAdminTitle": "Shinobi : Super Admin",
+"superAdminTitle": "SageTeaViewCCTV : Super Admin",
 "total": "totalt",
 "updateKeyText1": "\"updateKey\" saknas \"conf.json\", kan inte göra uppdateringar på detta sätt tills du lägger till den.",
 "updateKeyText2": "\"updateKey\" är felaktig.",
