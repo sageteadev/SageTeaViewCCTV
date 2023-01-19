@@ -88,7 +88,7 @@ node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTIO
 
 
 echo "============="
-echo "Default Superuser : admin@sagetea.video"
+echo "Default Superuser : admin@sagetea.cctv"
 echo "Default Password : admin"
 echo "Log in at http://HOST_IP:SAGETEA_PORT/super"
 if [ -e "/config/super.json" ]; then
