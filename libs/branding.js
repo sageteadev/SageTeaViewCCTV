@@ -21,7 +21,7 @@ module.exports = function(s,config,lang,app,io){
         config.socialLinks = [
             {
                 icon: 'home',
-                href: 'https://shinobi.video',
+                href: 'https://sagetea.ai/sagetea-view/',
                 title: 'Homepage'
             },
             {
@@ -36,7 +36,7 @@ module.exports = function(s,config,lang,app,io){
             },
             {
                 icon: 'youtube',
-                href: 'https://m.facebook.com/xfonemobile?_rdr',
+                href: 'https://www.youtube.com/@sageteagroup',
                 title: 'YouTube'
             }
         ]
