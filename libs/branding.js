@@ -26,17 +26,17 @@ module.exports = function(s,config,lang,app,io){
             },
             {
                 icon: 'facebook',
-                href: 'https://www.facebook.com/ShinobiCCTV',
+                href: 'https://m.facebook.com/100067917097691/',
                 title: 'Facebook'
             },
             {
                 icon: 'twitter',
-                href: 'https://twitter.com/ShinobiCCTV',
+                href: 'https://twitter.com/sageteasoftware?lang=en',
                 title: 'Twitter'
             },
             {
                 icon: 'youtube',
-                href: 'https://www.youtube.com/channel/UCbgbBLTK-koTyjOmOxA9msQ',
+                href: 'https://m.facebook.com/xfonemobile?_rdr',
                 title: 'YouTube'
             }
         ]
