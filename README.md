@@ -18,3 +18,10 @@ docker pull sagetea/sageteaviewcctv:dev
 ```console
 docker run -d --restart unless-stopped --name='SageTeaViewCCTV' -p '8080:8080/tcp' -v "/dev/shm/SageTeaViewCCTV/streams":'/dev/shm/streams':'rw' -v "$HOME/SageTeaViewCCTV/config":'/config':'rw' -v "$HOME/SageTeaViewCCTV/customAutoLoad":'/home/SageTeaViewCCTV/libs/customAutoLoad':'rw' -v "$HOME/SageTeaViewCCTV/database":'/var/lib/mysql':'rw' -v "$HOME/SageTeaViewCCTV/videos":'/home/SageTeaViewCCTV/videos':'rw' -v "$HOME/SageTeaViewCCTV/plugins":'/home/SageTeaViewCCTV/plugins':'rw' -v '/etc/localtime':'/etc/localtime':'ro' sagetea/sageteaviewcctv:dev
 ```
+
+XFone
+_____________________
+
+```console
+docker run -d --restart unless-stopped --name='SageTeaViewCCTV' -p '8080:8080/tcp' -v "/dev/shm/SageTeaViewCCTV/streams":'/dev/shm/streams':'rw' -v "$HOME/phablet/SageTeaViewCCTV/config":'/config':'rw' -v "$HOME/phablet/SageTeaViewCCTV/customAutoLoad":'/home/phablet/SageTeaViewCCTV/libs/customAutoLoad':'rw' -v "$HOME/phablet/SageTeaViewCCTV/database":'/var/lib/mysql':'rw' -v "$HOME/phablet/SageTeaViewCCTV/videos":'/home/SageTeaViewCCTV/videos':'rw' -v "$HOME/phablet/SageTeaViewCCTV/plugins":'/home/SageTeaViewCCTV/plugins':'rw' -v '/etc/localtime':'/etc/localtime':'ro' sagetea/sageteaviewcctv:dev
+```
