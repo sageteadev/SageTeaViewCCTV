@@ -52,7 +52,7 @@ module.exports = function(__dirname, config){
     }
 
     if(!config.dirname){config.dirname = '.'}
-    if(!config.port){config.port = 8081}
+    if(!config.port){config.port = 8080}
     if(!config.hostPort){config.hostPort = 8082}
     if(config.systemLog === undefined){config.systemLog = true}
     if(config.connectionType === undefined)config.connectionType = 'websocket'

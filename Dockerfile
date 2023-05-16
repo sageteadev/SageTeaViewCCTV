@@ -103,7 +103,7 @@ VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
 VOLUME ["/var/lib/mysql"]
 
-EXPOSE 8081 443 21 25
+EXPOSE 8080 443 21 25
 
 ENTRYPOINT ["sh","/home/Shinobi/Docker/init.sh"]
 
